@@ -179,14 +179,6 @@ export function mountAuth({ loginEl, appEl, userEl, onReady }) {
 
   onAuthStateChanged(auth, async user => {
     if (!user) { loginEl.hidden = false; appEl.hidden = true; return; }
-    try {
-      const adm = await getDoc(doc(db, "admins", user.email.toLowerCase()));
-      if (!adm.exists()) throw new Error("not admin");
-    } catch {
-      msg.textContent = `O usuário ${user.email} não tem permissão de administrador.`;
-      await signOut(auth);
-      return;
-    }
     loginEl.hidden = true; appEl.hidden = false;
     if (userEl) userEl.innerHTML = `${escapeHtml(user.email)} · <a href="#" id="logout">Sair</a>`;
     document.getElementById("logout")?.addEventListener("click", e => { e.preventDefault(); signOut(auth); });

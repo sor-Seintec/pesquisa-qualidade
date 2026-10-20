@@ -1,14 +1,11 @@
 // =====================================================================
-// CONFIGURAÇÃO DO FIREBASE
-// Firebase Console > Configurações do projeto > Seus apps > App da Web
-// Copie o objeto "firebaseConfig" e cole abaixo.
-// (Esses valores são públicos por natureza; a segurança fica nas regras do Firestore.)
+// CONFIGURAÇÃO DO FIREBASE - U.R.E. Sorocaba (Pesquisa de Qualidade TI)
 // =====================================================================
 export const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI.firebaseapp.com",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI.appspot.com",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI"
+  apiKey: "AIzaSyDrQxA0lHKu9S5vmUL_JicGPMA7gsvI6GY",
+  authDomain: "ure-sorocaba-qualidade.firebaseapp.com",
+  projectId: "ure-sorocaba-qualidade",
+  storageBucket: "ure-sorocaba-qualidade.firebasestorage.app",
+  messagingSenderId: "405929561426",
+  appId: "1:405929561426:web:b79be823563b89420dbe8b"
 };
