@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Pesquisa de Satisfação - U.R.E. Sorocaba</title>
+<link rel="icon" href="images/logo_ure.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#0b2545;--gold:#f5b301;--bg:#eef2f7;--text:#1e293b;--muted:#64748b;--star-off:#e2e8f0;--star-on:#f5b301}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;justify-content:center;padding:32px 16px;min-height:100vh}
+  .wrap{width:100%;max-width:660px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+  .banner{height:260px;background:url('images/banner.jpg') center/cover;border-bottom:5px solid var(--gold)}
+  .content{padding:36px}
+  .head{text-align:center;margin-bottom:26px}
+  .head h1{font-size:24px;color:var(--navy);margin-bottom:12px}
+  .head p{color:var(--muted);line-height:1.6;font-size:15px}
+  .head p b{color:var(--text)}
+  .q{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:22px;margin-bottom:20px}
+  .q p{font-weight:500;margin-bottom:14px;line-height:1.5}
+  .scale{display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;flex-wrap:wrap}
+  .scale small{font-size:13px;font-weight:600;color:var(--muted)}
+  .stars{display:flex;flex-direction:row-reverse;gap:4px}
+  .stars input{position:absolute;opacity:0;width:0;height:0}
+  .stars label{font-size:42px;line-height:1;color:var(--star-off);cursor:pointer;transition:color .15s,transform .1s}
+  .stars label:hover{transform:scale(1.1)}
+  .stars input:checked~label{color:var(--star-on)}
+  .stars label:hover,.stars label:hover~label{color:#ffd666!important}
+  .stars input:focus-visible+label{outline:2px solid #3b82f6;border-radius:4px}
+  .btn{width:100%;padding:16px;background:var(--navy);color:#fff;border:0;border-radius:10px;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn:hover{background:#13315c}.btn:disabled{opacity:.6;cursor:wait}
+  .msg{text-align:center;padding:50px 36px}
+  .msg .icon{font-size:64px;margin-bottom:10px}
+  .msg h1{color:var(--navy);font-size:24px;margin-bottom:10px}
+  .msg p{color:var(--muted);line-height:1.6}
+  .err{color:#b91c1c;text-align:center;margin-top:12px;font-size:14px;min-height:18px}
+  .foot{text-align:center;font-size:12px;color:var(--muted);padding:18px;border-top:1px solid #e2e8f0;background:#f8fafc}
+  @media(max-width:600px){.content{padding:22px}.banner{height:170px}.stars label{font-size:36px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner" role="img" aria-label="U.R.E. Sorocaba - Pesquisa de Satisfação"></div>
+
+  <div id="loading" class="msg"><p>Carregando pesquisa...</p></div>
+
+  <div id="invalid" class="msg" hidden>
+    <div class="icon">⚠️</div>
+    <h1>Pesquisa não encontrada</h1>
+    <p>O link pode estar incompleto. Abra novamente pelo botão do e-mail recebido.</p>
+  </div>
+
+  <div id="done" class="msg" hidden>
+    <div class="icon">✅</div>
+    <h1>Obrigado pela sua avaliação!</h1>
+    <p>Sua resposta foi registrada com sucesso.<br>Ela nos ajuda a melhorar o suporte de tecnologia às escolas.<br><br>Você já pode fechar esta página.</p>
+  </div>
+
+  <div id="form-area" class="content" hidden>
+    <div class="head">
+      <h1>Pesquisa de Satisfação - TI</h1>
+      <p>Olá, <b id="school"></b>!</p>
+      <p>Por favor, avalie o atendimento referente à OS <b id="os"></b>.</p>
+    </div>
+    <form id="form" novalidate>
+      <div id="questions"></div>
+      <button class="btn" type="submit" id="submit">Confirmar Avaliação</button>
+      <div class="err" id="err"></div>
+    </form>
+  </div>
+
+  <div class="foot">Equipe de Tecnologia — U.R.E. Sorocaba · Secretaria da Educação do Estado de São Paulo</div>
+</div>
+
+<script type="module">
+import { db } from "./js/app.js";
+import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+
+const QUESTIONS = [
+  ["q1", "1. Como você avalia a <b>pontualidade e prontidão</b> do atendimento?"],
+  ["q2", "2. Como você avalia a <b>qualidade técnica e resolução</b> do problema?"],
+  ["q3", "3. Como você avalia a <b>cortesia e profissionalismo</b> do técnico?"]
+];
+const $ = id => document.getElementById(id);
+const show = id => ["loading","invalid","done","form-area"].forEach(x => $(x).hidden = x !== id);
+
+$("questions").innerHTML = QUESTIONS.map(([k, text]) => `
+  <div class="q"><p>${text}</p>
+    <div class="scale"><small>1 = Ruim</small>
+      <div class="stars">${[5,4,3,2,1].map(v => `<input type="radio" id="${k}_${v}" name="${k}" value="${v}"><label for="${k}_${v}" title="${v} estrela(s)">★</label>`).join("")}</div>
+    <small>5 = Ótimo</small></div>
+  </div>`).join("");
+
+const token = new URLSearchParams(location.search).get("t");
+let ref;
+(async () => {
+  if (!token) return show("invalid");
+  try {
+    ref = doc(db, "surveys", token);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return show("invalid");
+    const s = snap.data();
+    if (s.status === "completed") return show("done");
+    $("school").textContent = s.schoolName;
+    $("os").textContent = s.os;
+    show("form-area");
+  } catch (e) { console.error(e); show("invalid"); }
+})();
+
+$("form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target, vals = {};
+  for (const [k] of QUESTIONS) {
+    const v = f.querySelector(`input[name="${k}"]:checked`);
+    if (!v) { $("err").textContent = "Por favor, responda as 3 perguntas."; return; }
+    vals[k] = parseInt(v.value, 10);
+  }
+  $("submit").disabled = true; $("err").textContent = "";
+  try {
+    await updateDoc(ref, { ...vals, status: "completed", completedAt: serverTimestamp() });
+    show("done");
+    setTimeout(() => { try { window.close(); } catch {} }, 4000);
+  } catch (err) {
+    console.error(err);
+    $("submit").disabled = false;
+    $("err").textContent = "Não foi possível salvar. Esta pesquisa pode já ter sido respondida.";
+  }
+});
+</script>
+</body>
+</html>

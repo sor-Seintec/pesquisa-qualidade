@@ -1,0 +1,43 @@
+rules_version = '2';
+// Regras de segurança - Pesquisa de Qualidade TI (U.R.E. Sorocaba)
+// Cole este conteúdo em: Firebase Console > Firestore Database > Regras > Publicar
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Administrador = usuário logado cujo e-mail existe na coleção /admins
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
+    }
+    function validScore(v) { return v is int && v >= 1 && v <= 5; }
+
+    // Lista de administradores: gerenciada apenas pelo Console do Firebase
+    match /admins/{email} {
+      allow get: if request.auth != null && request.auth.token.email.lower() == email;
+      allow list, write: if false;
+    }
+
+    // Configuração (URL do Power Automate): somente administradores
+    match /config/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Pesquisas
+    match /surveys/{token} {
+      // Quem tem o link (token aleatório) consegue abrir UMA pesquisa; listar todas, só admin
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+
+      // A escola só pode responder uma vez: pendente -> respondida, apenas as 3 notas (1 a 5)
+      allow update: if isAdmin() || (
+        resource.data.status == 'pending' &&
+        request.resource.data.status == 'completed' &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['q1', 'q2', 'q3', 'status', 'completedAt']) &&
+        validScore(request.resource.data.q1) &&
+        validScore(request.resource.data.q2) &&
+        validScore(request.resource.data.q3) &&
+        request.resource.data.completedAt == request.time
+      );
+    }
+  }
+}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesquisa de Satisfação - TI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #007bff;
+            --primary-hover: #0056b3;
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --star-inactive: #e4e5e9;
+            --star-active: #ffc107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-color); 
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            min-height: 100vh; 
+            padding: 40px 20px; 
+            color: var(--text-main);
+        }
+
+        .survey-container { 
+            background-color: var(--card-bg); 
+            border-radius: 12px; 
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
+            width: 100%; 
+            max-width: 650px; 
+            overflow: hidden;
+        }
+
+        .banner {
+            width: 100%;
+            height: 280px;
+            background-image: url('/images/banner.jpg');
+            background-size: cover;
+            background-position: center;
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h2 { 
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-main);
+        }
+
+        .header p {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .header p b {
+            color: var(--text-main);
+        }
+
+        .question-card { 
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .question-card p {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .star-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e4e5e9;
+        }
+
+        .star-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .star-group { 
+            display: flex; 
+            flex-direction: row-reverse; 
+            justify-content: center; 
+            gap: 5px;
+        }
+
+        .star-group input { 
+            display: none; 
+        }
+
+        .star-group label { 
+            font-size: 40px; 
+            color: var(--star-inactive); 
+            cursor: pointer; 
+            transition: color 0.2s;
+            line-height: 1;
+        }
+
+        .star-group input:checked ~ label { 
+            color: var(--star-active); 
+        }
+
+        .star-group label:hover, 
+        .star-group label:hover ~ label { 
+            color: #ffda6a !important; 
+        }
+
+        .submit-btn { 
+            width: 100%; 
+            padding: 16px; 
+            background-color: var(--primary); 
+            color: #fff; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 600;
+            margin-top: 10px; 
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .submit-btn:hover { 
+            background-color: var(--primary-hover); 
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        @media (max-width: 600px) {
+            .content { padding: 25px; }
+            .banner { height: 180px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="survey-container">
+        <div class="banner"></div>
+        <div class="content">
+            <div class="header">
+                <h2>Pesquisa de Satisfação - TI</h2>
+                <p>Olá <b><%= survey.name %></b>,</p>
+                <p>Por favor, avalie o atendimento referente à OS <b><%= survey.os_number %></b>.</p>
+            </div>
+            
+            <form action="/survey/<%= survey.token %>" method="POST">
+                
+                <div class="question-card">
+                    <p>1. Como você avalia a <b>pontualidade e prontidão</b> do atendimento?</p>
+                    <div class="star-container">
+                        <span class="star-label">1 = Ruim</span>
+                        <div class="star-group">
+                            <input type="radio" id="q1_5" name="q1_score" value="5" required><label for="q1_5">★</label>
+                            <input type="radio" id="q1_4" name="q1_score" value="4"><label for="q1_4">★</label>
+                            <input type="radio" id="q1_3" name="q1_score" value="3"><label for="q1_3">★</label>
+                            <input type="radio" id="q1_2" name="q1_score" value="2"><label for="q1_2">★</label>
+                            <input type="radio" id="q1_1" name="q1_score" value="1"><label for="q1_1">★</label>
+                        </div>
+                        <span class="star-label">5 = Ótimo</span>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <p>2. Como você avalia a <b>qualidade técnica e resolução</b> do problema?</p>
+                    <div class="star-container">
+                        <span class="star-label">1 = Ruim</span>
+                        <div class="star-group">
+                            <input type="radio" id="q2_5" name="q2_score" value="5" required><label for="q2_5">★</label>
+                            <input type="radio" id="q2_4" name="q2_score" value="4"><label for="q2_4">★</label>
+                            <input type="radio" id="q2_3" name="q2_score" value="3"><label for="q2_3">★</label>
+                            <input type="radio" id="q2_2" name="q2_score" value="2"><label for="q2_2">★</label>
+                            <input type="radio" id="q2_1" name="q2_score" value="1"><label for="q2_1">★</label>
+                        </div>
+                        <span class="star-label">5 = Ótimo</span>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <p>3. Como você avalia a <b>cortesia e profissionalismo</b> do técnico?</p>
+                    <div class="star-container">
+                        <span class="star-label">1 = Ruim</span>
+                        <div class="star-group">
+                            <input type="radio" id="q3_5" name="q3_score" value="5" required><label for="q3_5">★</label>
+                            <input type="radio" id="q3_4" name="q3_score" value="4"><label for="q3_4">★</label>
+                            <input type="radio" id="q3_3" name="q3_score" value="3"><label for="q3_3">★</label>
+                            <input type="radio" id="q3_2" name="q3_score" value="2"><label for="q3_2">★</label>
+                            <input type="radio" id="q3_1" name="q3_score" value="1"><label for="q3_1">★</label>
+                        </div>
+                        <span class="star-label">5 = Ótimo</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">Confirmar Avaliação</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

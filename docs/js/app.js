@@ -1,0 +1,195 @@
+// =====================================================================
+// Núcleo compartilhado: Firebase, regra de e-mail, template e envio
+// =====================================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { firebaseConfig } from "./firebase-config.js";
+import { SCHOOLS } from "./schools.js";
+
+export const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);
+export { SCHOOLS };
+
+// ---------------------------------------------------------------------
+// REGRA DE E-MAIL DAS ESCOLAS
+// e + CIE com 6 dígitos (CIE de 5 dígitos ganha um 0 na frente) + sufixo + @educacao.sp.gov.br
+// Ex.: CIE 16093 -> e016093a@educacao.sp.gov.br
+// >>> Se o padrão correto for SEM o "a", troque EMAIL_SUFFIX para "" <<<
+// ---------------------------------------------------------------------
+export const EMAIL_SUFFIX = "a";
+export const EMAIL_DOMAIN = "@educacao.sp.gov.br";
+const TEST_SCHOOLS = { "2110": "angeloruivo@gmail.com" }; // escola de teste
+
+export function schoolEmail(cie) {
+  const c = String(cie).trim();
+  if (TEST_SCHOOLS[c]) return TEST_SCHOOLS[c];
+  return "e" + c.padStart(6, "0") + EMAIL_SUFFIX + EMAIL_DOMAIN;
+}
+
+export function findSchool(cie) {
+  const c = String(cie).trim();
+  const s = SCHOOLS.find(x => x.cie === c);
+  return s ? { ...s, email: schoolEmail(c) } : null;
+}
+
+export const isTestSchool = cie => !!TEST_SCHOOLS[String(cie)];
+
+// URLs públicas (funcionam no GitHub Pages e localmente)
+export const pageUrl = file => new URL(file, window.location.href).href;
+export const surveyUrl = token => pageUrl("pesquisa.html?t=" + encodeURIComponent(token));
+export const logoUrl = () => pageUrl("images/logo_ure.png");
+
+export function escapeHtml(str) {
+  return String(str ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// ---------------------------------------------------------------------
+// TEMPLATE DO E-MAIL (compatível com Gmail/Outlook: tabelas + cores sólidas)
+// ---------------------------------------------------------------------
+export function generateEmailHtml({ schoolName, cie, osNumber, surveyLink, email }) {
+  const school = escapeHtml(schoolName), os = escapeHtml(osNumber), cieTxt = escapeHtml(cie), mail = escapeHtml(email);
+  return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Pesquisa de Satisfação - U.R.E. Sorocaba</title></head>
+<body style="margin:0;padding:0;background:#eef2f7;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#eef2f7" style="background:#eef2f7;">
+<tr><td align="center" style="padding:28px 12px;">
+  <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #dde3ec;font-family:'Segoe UI',Arial,Helvetica,sans-serif;">
+    <tr><td height="6" bgcolor="#f5b301" style="height:6px;line-height:6px;font-size:0;background:#f5b301;">&nbsp;</td></tr>
+    <tr><td align="center" bgcolor="#0b2545" style="background:#0b2545;padding:30px 24px 26px 24px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr><td align="center" bgcolor="#ffffff" style="background:#ffffff;border-radius:14px;padding:10px;">
+        <img src="${logoUrl()}" width="96" alt="U.R.E. Sorocaba" style="display:block;width:96px;max-width:96px;height:auto;border:0;margin:0 auto;">
+      </td></tr></table>
+      <div style="height:16px;line-height:16px;font-size:0;">&nbsp;</div>
+      <div style="color:#ffffff;font-size:22px;font-weight:700;letter-spacing:1px;">U.R.E. SOROCABA</div>
+      <div style="color:#9fb3cf;font-size:13px;margin-top:4px;">Suporte de Tecnologia às Unidades Escolares</div>
+    </td></tr>
+    <tr><td align="center" style="padding:30px 32px 6px 32px;">
+      <div style="font-size:24px;font-weight:700;color:#0b2545;">Pesquisa de Satisfação</div>
+      <div style="font-size:26px;color:#f5b301;letter-spacing:4px;margin-top:6px;">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+    </td></tr>
+    <tr><td style="padding:14px 36px 6px 36px;color:#334155;font-size:15px;line-height:24px;">
+      <p style="margin:0 0 12px 0;">Olá, <strong>${school}</strong>!</p>
+      <p style="margin:0;">Gostaríamos de saber sua opinião sobre o atendimento de tecnologia realizado recentemente em sua escola. Sua avaliação nos ajuda a melhorar continuamente nossos serviços.</p>
+    </td></tr>
+    <tr><td style="padding:20px 36px 4px 36px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" bgcolor="#f6f8fb" style="background:#f6f8fb;border:1px solid #e3e8ef;border-radius:10px;"><tr>
+        <td width="50%" style="padding:14px 18px;border-right:1px solid #e3e8ef;">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">Ordem de Serviço</div>
+          <div style="font-size:17px;font-weight:700;color:#0b2545;margin-top:3px;">${os}</div></td>
+        <td width="50%" style="padding:14px 18px;">
+          <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:1px;">CIE da Escola</div>
+          <div style="font-size:17px;font-weight:700;color:#0b2545;margin-top:3px;">${cieTxt}</div></td>
+      </tr></table>
+    </td></tr>
+    <tr><td align="center" style="padding:18px 36px 0 36px;color:#475569;font-size:13px;line-height:20px;">
+      São apenas <strong>3 perguntas</strong> com notas de <strong>1 a 5 estrelas</strong><br>
+      <span style="color:#64748b;">1 = Ruim &nbsp;•&nbsp; 5 = Ótimo &nbsp;•&nbsp; menos de 1 minuto</span>
+    </td></tr>
+    <tr><td align="center" style="padding:26px 36px 10px 36px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center"><tr>
+        <td align="center" bgcolor="#16a34a" style="background:#16a34a;border-radius:8px;">
+          <a href="${surveyLink}" target="_blank" style="display:inline-block;padding:15px 38px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:8px;font-family:'Segoe UI',Arial,sans-serif;">Responder Pesquisa &rarr;</a>
+        </td></tr></table>
+    </td></tr>
+    <tr><td align="center" style="padding:8px 36px 28px 36px;font-size:12px;color:#94a3b8;line-height:18px;">
+      Se o botão não funcionar, copie e cole o link no navegador:<br>
+      <a href="${surveyLink}" target="_blank" style="color:#2563eb;word-break:break-all;">${surveyLink}</a>
+    </td></tr>
+    <tr><td align="center" bgcolor="#f6f8fb" style="background:#f6f8fb;border-top:1px solid #e3e8ef;padding:20px 24px;font-size:12px;color:#64748b;line-height:18px;">
+      <strong style="color:#0b2545;">Equipe de Tecnologia — U.R.E. Sorocaba</strong><br>
+      Secretaria da Educação do Estado de São Paulo<br>
+      <span style="color:#94a3b8;">Mensagem automática enviada para ${mail}. Não é necessário responder.</span>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+}
+
+// ---------------------------------------------------------------------
+// ENVIO: cria a pesquisa no Firestore e dispara o e-mail via Power Automate
+// ---------------------------------------------------------------------
+let cachedWebhook = null;
+export async function getWebhookUrl() {
+  if (cachedWebhook) return cachedWebhook;
+  const snap = await getDoc(doc(db, "config", "app"));
+  cachedWebhook = snap.exists() ? (snap.data().webhookUrl || "") : "";
+  return cachedWebhook;
+}
+export async function saveWebhookUrl(url) {
+  await setDoc(doc(db, "config", "app"), { webhookUrl: url.trim() }, { merge: true });
+  cachedWebhook = url.trim();
+}
+
+export async function createAndSendSurvey({ cie, osNumber, campaign = null }) {
+  const school = findSchool(cie);
+  if (!school) throw new Error(`CIE ${cie} não encontrado na lista de escolas.`);
+  const webhook = await getWebhookUrl();
+  if (!webhook) throw new Error("URL do Power Automate não configurada (aba Configuração).");
+
+  const token = crypto.randomUUID();
+  const link = surveyUrl(token);
+  await setDoc(doc(db, "surveys", token), {
+    os: String(osNumber).trim(), cie: school.cie, schoolName: school.name, email: school.email,
+    status: "pending", q1: null, q2: null, q3: null, campaign,
+    createdAt: serverTimestamp(), completedAt: null, sentBy: auth.currentUser?.email || null,
+    emailStatus: "sending"
+  });
+
+  let emailStatus = "sent";
+  try {
+    const r = await fetch(webhook, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: school.email, school_name: school.name, cie: school.cie, os_number: String(osNumber).trim(),
+        survey_link: link, subject: `Pesquisa de Satisfação - Atendimento OS: ${String(osNumber).trim()}`,
+        body_html: generateEmailHtml({ schoolName: school.name, cie: school.cie, osNumber, surveyLink: link, email: school.email })
+      })
+    });
+    if (!r.ok) emailStatus = "error_" + r.status;
+  } catch (e) { emailStatus = "error_network"; }
+
+  await setDoc(doc(db, "surveys", token), { emailStatus }, { merge: true });
+  if (emailStatus !== "sent") throw new Error(`Pesquisa criada, mas o envio do e-mail falhou (${emailStatus}).`);
+  return { token, link, school };
+}
+
+// ---------------------------------------------------------------------
+// LOGIN (somente administradores cadastrados em /admins/{email})
+// ---------------------------------------------------------------------
+export function mountAuth({ loginEl, appEl, userEl, onReady }) {
+  const form = loginEl.querySelector("form");
+  const msg = loginEl.querySelector(".login-msg");
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    msg.textContent = "Entrando...";
+    try {
+      await signInWithEmailAndPassword(auth, form.email.value.trim(), form.password.value);
+    } catch (err) {
+      msg.textContent = "E-mail ou senha inválidos.";
+    }
+  });
+  loginEl.querySelector(".forgot")?.addEventListener("click", async e => {
+    e.preventDefault();
+    if (!form.email.value) { msg.textContent = "Digite seu e-mail para redefinir a senha."; return; }
+    try { await sendPasswordResetEmail(auth, form.email.value.trim()); msg.textContent = "Enviamos um link de redefinição para o seu e-mail."; }
+    catch { msg.textContent = "Não foi possível enviar o e-mail de redefinição."; }
+  });
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) { loginEl.hidden = false; appEl.hidden = true; return; }
+    try {
+      const adm = await getDoc(doc(db, "admins", user.email.toLowerCase()));
+      if (!adm.exists()) throw new Error("not admin");
+    } catch {
+      msg.textContent = `O usuário ${user.email} não tem permissão de administrador.`;
+      await signOut(auth);
+      return;
+    }
+    loginEl.hidden = true; appEl.hidden = false;
+    if (userEl) userEl.innerHTML = `${escapeHtml(user.email)} · <a href="#" id="logout">Sair</a>`;
+    document.getElementById("logout")?.addEventListener("click", e => { e.preventDefault(); signOut(auth); });
+    onReady?.(user);
+  });
+}

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Painel - Pesquisa de Qualidade TI | U.R.E. Sorocaba</title>
+<link rel="icon" href="images/logo_ure.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <img src="images/logo_ure.png" alt="U.R.E. Sorocaba">
+  <div class="brand"><b>U.R.E. SOROCABA</b><span>Pesquisa de Qualidade — Suporte de TI</span></div>
+  <nav><a href="index.html" class="active">Envio</a><a href="dashboard.html">Dashboard</a></nav>
+  <div class="userbar" id="user"></div>
+</div></header>
+
+<!-- LOGIN -->
+<section id="login" class="login-wrap" hidden>
+  <div class="card login-card">
+    <img src="images/logo_ure.png" alt="">
+    <h2>Acesso da equipe de TI</h2>
+    <p class="sub">Entre com seu usuário cadastrado no sistema.</p>
+    <form>
+      <div class="field"><label class="f">E-mail</label><input class="f" name="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label class="f">Senha</label><input class="f" name="password" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-primary btn-block">Entrar</button>
+      <div class="login-msg"></div>
+      <p style="text-align:center;font-size:13px;margin-top:6px"><a href="#" class="forgot">Esqueci minha senha</a></p>
+    </form>
+  </div>
+</section>
+
+<!-- APP -->
+<main id="app" class="container" hidden>
+  <div class="grid grid-2">
+
+    <!-- Envio individual -->
+    <div class="card">
+      <h2>📨 Enviar pesquisa de um atendimento</h2>
+      <p class="sub">Informe o número da OS e o CIE da escola atendida. O e-mail é enviado na hora.</p>
+      <form id="single">
+        <div class="field"><label class="f">Número da OS</label><input class="f" name="os" required placeholder="Ex.: 2026-001234"></div>
+        <div class="field"><label class="f">CIE da escola</label>
+          <input class="f" name="cie" list="schools" required inputmode="numeric" placeholder="Digite o CIE ou o nome">
+          <datalist id="schools"></datalist>
+          <div class="hint" id="cie-info">&nbsp;</div>
+        </div>
+        <button class="btn btn-green btn-block" id="single-btn">Enviar pesquisa</button>
+        <div id="single-msg"></div>
+      </form>
+    </div>
+
+    <!-- Disparo em massa -->
+    <div class="card">
+      <h2>📢 Disparo para todas as escolas</h2>
+      <p class="sub">Cria uma pesquisa para cada escola da lista e envia os e-mails em sequência.</p>
+      <div class="field"><label class="f">Identificação do disparo (aparece como "OS" no e-mail)</label>
+        <input class="f" id="mass-os" placeholder="Ex.: PESQUISA-GERAL-OUT-2026"></div>
+      <div class="field" style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="mass-test" style="width:18px;height:18px">
+        <label for="mass-test" style="font-size:14px">Incluir a escola de teste (CIE 2110)</label>
+      </div>
+      <div class="field" style="display:flex;gap:8px;align-items:center">
+        <input type="checkbox" id="mass-only-test" style="width:18px;height:18px">
+        <label for="mass-only-test" style="font-size:14px">Simulação: enviar <b>somente</b> para a escola de teste</label>
+      </div>
+      <button class="btn btn-primary btn-block" id="mass-btn">Iniciar disparo</button>
+      <div id="mass-area" hidden>
+        <div class="progress"><div id="mass-bar"></div></div>
+        <div class="hint" id="mass-status"></div>
+        <div class="log" id="mass-log"></div>
+      </div>
+    </div>
+
+    <!-- Configuração -->
+    <div class="card">
+      <h2>⚙️ Configuração</h2>
+      <p class="sub">URL do fluxo do Power Automate ("Quando uma solicitação HTTP é recebida"). Fica salva com segurança no Firebase, visível só para administradores.</p>
+      <div class="field"><label class="f">URL do Power Automate</label><input class="f" id="webhook" placeholder="https://...powerplatform.com/...&sig=..."></div>
+      <button class="btn btn-light" id="save-webhook">Salvar URL</button>
+      <div id="cfg-msg"></div>
+    </div>
+
+    <!-- Lista de e-mails -->
+    <div class="card">
+      <h2>🏫 Escolas e e-mails gerados</h2>
+      <p class="sub">Regra: <code>e</code> + CIE com 6 dígitos + <code id="suffix"></code> + <code>@educacao.sp.gov.br</code></p>
+      <div class="table-wrap" style="max-height:300px">
+        <table class="t"><thead><tr><th>CIE</th><th>Escola</th><th>E-mail</th></tr></thead><tbody id="school-list"></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script type="module">
+import { SCHOOLS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX, createAndSendSurvey, getWebhookUrl, saveWebhookUrl, mountAuth, escapeHtml } from "./js/app.js";
+const $ = id => document.getElementById(id);
+const alertBox = (type, html) => `<div class="alert alert-${type}">${html}</div>`;
+
+$("schools").innerHTML = SCHOOLS.map(s => `<option value="${s.cie}">${escapeHtml(s.name)}</option>`).join("");
+$("school-list").innerHTML = SCHOOLS.map(s => `<tr><td>${s.cie}</td><td>${escapeHtml(s.name)}</td><td>${schoolEmail(s.cie)}</td></tr>`).join("");
+$("suffix").textContent = EMAIL_SUFFIX ? `"${EMAIL_SUFFIX}"` : '(sem sufixo)';
+
+mountAuth({
+  loginEl: $("login"), appEl: $("app"), userEl: $("user"),
+  onReady: async () => { try { $("webhook").value = await getWebhookUrl(); } catch {} }
+});
+
+// Info do CIE digitado
+$("single").cie.addEventListener("input", e => {
+  const s = findSchool(e.target.value);
+  $("cie-info").innerHTML = s ? `✅ <b>${escapeHtml(s.name)}</b> — ${s.email}` : (e.target.value ? "❌ CIE não encontrado" : "&nbsp;");
+});
+
+// Envio individual
+$("single").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target; $("single-btn").disabled = true; $("single-msg").innerHTML = alertBox("info", "Enviando...");
+  try {
+    const { link, school } = await createAndSendSurvey({ cie: f.cie.value, osNumber: f.os.value });
+    $("single-msg").innerHTML = alertBox("ok", `✅ Pesquisa da OS <b>${escapeHtml(f.os.value)}</b> enviada para <b>${escapeHtml(school.name)}</b> (${school.email}).<br><a href="${link}" target="_blank">Abrir link da pesquisa</a>`);
+    f.reset(); $("cie-info").innerHTML = "&nbsp;";
+  } catch (err) {
+    $("single-msg").innerHTML = alertBox("err", "❌ " + escapeHtml(err.message));
+  } finally { $("single-btn").disabled = false; }
+});
+
+// Configuração
+$("save-webhook").addEventListener("click", async () => {
+  const url = $("webhook").value.trim();
+  if (!/^https:\/\/.+sig=/.test(url)) { $("cfg-msg").innerHTML = alertBox("err", "A URL deve começar com https:// e conter a assinatura (&sig=...)."); return; }
+  try { await saveWebhookUrl(url); $("cfg-msg").innerHTML = alertBox("ok", "URL salva."); }
+  catch (e) { $("cfg-msg").innerHTML = alertBox("err", "Erro ao salvar: " + escapeHtml(e.message)); }
+});
+
+// Disparo em massa (sequencial, com intervalo para respeitar limites do Outlook)
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+$("mass-btn").addEventListener("click", async () => {
+  const os = $("mass-os").value.trim();
+  if (!os) { alert("Informe a identificação do disparo."); return; }
+  const onlyTest = $("mass-only-test").checked, incTest = $("mass-test").checked;
+  const targets = SCHOOLS.filter(s => onlyTest ? isTestSchool(s.cie) : (incTest || !isTestSchool(s.cie)));
+  if (!confirm(`Confirmar o envio de ${targets.length} e-mail(s) com a identificação "${os}"?\n\nExemplo: ${schoolEmail(targets[0].cie)}`)) return;
+
+  $("mass-btn").disabled = true; $("mass-area").hidden = false; $("mass-log").textContent = "";
+  let ok = 0, fail = 0;
+  const log = t => { $("mass-log").textContent += t + "\n"; $("mass-log").scrollTop = 1e9; };
+  for (let i = 0; i < targets.length; i++) {
+    const s = targets[i];
+    try { await createAndSendSurvey({ cie: s.cie, osNumber: os, campaign: os }); ok++; log(`✔ ${s.cie} ${s.name} -> ${schoolEmail(s.cie)}`); }
+    catch (err) { fail++; log(`✖ ${s.cie} ${s.name}: ${err.message}`); }
+    $("mass-bar").style.width = `${((i + 1) / targets.length) * 100}%`;
+    $("mass-status").textContent = `${i + 1}/${targets.length} processadas · ${ok} enviadas · ${fail} com erro`;
+    if (i < targets.length - 1) await sleep(1500);
+  }
+  log(`\nConcluído: ${ok} enviadas, ${fail} com erro.`);
+  $("mass-btn").disabled = false;
+});
+</script>
+</body>
+</html>
