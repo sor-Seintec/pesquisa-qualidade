@@ -7,7 +7,7 @@
 <title>Painel - Pesquisa de Qualidade TI | U.R.E. Sorocaba</title>
 <link rel="icon" href="images/logo_ure.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body>
 <header class="topbar"><div class="topbar-inner">
@@ -101,7 +101,7 @@
 </main>
 
 <script type="module">
-import { SCHOOLS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX, createAndSendSurvey, getWebhookUrl, saveWebhookUrl, mountAuth, escapeHtml } from "./js/app.js";
+import { SCHOOLS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX, createAndSendSurvey, getWebhookUrl, saveWebhookUrl, mountAuth, escapeHtml } from "./js/app.js?v=2";
 const $ = id => document.getElementById(id);
 const alertBox = (type, html) => `<div class="alert alert-${type}">${html}</div>`;
 
