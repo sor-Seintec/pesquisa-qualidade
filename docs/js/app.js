@@ -122,17 +122,18 @@ export async function saveWebhookUrl(url) {
   cachedWebhook = url.trim();
 }
 
-export async function createAndSendSurvey({ cie, osNumber, campaign = null }) {
+export async function createAndSendSurvey({ cie, osNumber, customEmail = null, campaign = null }) {
   const school = findSchool(cie);
   if (!school) throw new Error(`CIE ${cie} não encontrado na lista de escolas.`);
+  const targetEmail = (customEmail && String(customEmail).trim()) ? String(customEmail).trim() : school.email;
   const webhook = await getWebhookUrl();
   if (!webhook) throw new Error("URL do Power Automate não configurada (aba Configuração).");
 
   const token = crypto.randomUUID();
   const link = surveyUrl(token);
   await setDoc(doc(db, "surveys", token), {
-    os: String(osNumber).trim(), cie: school.cie, schoolName: school.name, email: school.email,
-    status: "pending", q1: null, q2: null, q3: null, campaign,
+    os: String(osNumber).trim(), cie: school.cie, schoolName: school.name, email: targetEmail,
+    status: "pending", q1: null, q2: null, q3: null, comment: null, campaign,
     createdAt: serverTimestamp(), completedAt: null, sentBy: auth.currentUser?.email || null,
     emailStatus: "sending"
   });
@@ -142,9 +143,9 @@ export async function createAndSendSurvey({ cie, osNumber, campaign = null }) {
     const r = await fetch(webhook, {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        to: school.email, school_name: school.name, cie: school.cie, os_number: String(osNumber).trim(),
+        to: targetEmail, school_name: school.name, cie: school.cie, os_number: String(osNumber).trim(),
         survey_link: link, subject: `Pesquisa de Satisfação - Atendimento OS: ${String(osNumber).trim()}`,
-        body_html: generateEmailHtml({ schoolName: school.name, cie: school.cie, osNumber, surveyLink: link, email: school.email })
+        body_html: generateEmailHtml({ schoolName: school.name, cie: school.cie, osNumber, surveyLink: link, email: targetEmail })
       })
     });
     if (!r.ok) emailStatus = "error_" + r.status;
@@ -152,12 +153,23 @@ export async function createAndSendSurvey({ cie, osNumber, campaign = null }) {
 
   await setDoc(doc(db, "surveys", token), { emailStatus }, { merge: true });
   if (emailStatus !== "sent") throw new Error(`Pesquisa criada, mas o envio do e-mail falhou (${emailStatus}).`);
-  return { token, link, school };
+  return { token, link, school: { ...school, email: targetEmail } };
 }
 
 // ---------------------------------------------------------------------
-// LOGIN (somente administradores cadastrados em /admins/{email})
+// LOGIN (alias "admin" -> angeloruivo@gmail.com)
 // ---------------------------------------------------------------------
+const LOGIN_ALIASES = {
+  "admin": "angeloruivo@gmail.com",
+  "angelo": "angeloruivo@gmail.com"
+};
+
+export function resolveLoginEmail(input) {
+  const raw = String(input || "").trim();
+  const key = raw.toLowerCase();
+  return LOGIN_ALIASES[key] || raw;
+}
+
 export function mountAuth({ loginEl, appEl, userEl, onReady }) {
   const form = loginEl.querySelector("form");
   const msg = loginEl.querySelector(".login-msg");
@@ -165,22 +177,29 @@ export function mountAuth({ loginEl, appEl, userEl, onReady }) {
     e.preventDefault();
     msg.textContent = "Entrando...";
     try {
-      await signInWithEmailAndPassword(auth, form.email.value.trim(), form.password.value);
+      const email = resolveLoginEmail(form.email.value);
+      await signInWithEmailAndPassword(auth, email, form.password.value);
     } catch (err) {
-      msg.textContent = "E-mail ou senha inválidos.";
+      msg.textContent = "Usuário/e-mail ou senha inválidos.";
     }
   });
   loginEl.querySelector(".forgot")?.addEventListener("click", async e => {
     e.preventDefault();
-    if (!form.email.value) { msg.textContent = "Digite seu e-mail para redefinir a senha."; return; }
-    try { await sendPasswordResetEmail(auth, form.email.value.trim()); msg.textContent = "Enviamos um link de redefinição para o seu e-mail."; }
-    catch { msg.textContent = "Não foi possível enviar o e-mail de redefinição."; }
+    if (!form.email.value) { msg.textContent = "Digite seu usuário ou e-mail para redefinir a senha."; return; }
+    try {
+      const email = resolveLoginEmail(form.email.value);
+      await sendPasswordResetEmail(auth, email);
+      msg.textContent = `Enviamos um link de redefinição para ${email}.`;
+    } catch {
+      msg.textContent = "Não foi possível enviar o e-mail de redefinição.";
+    }
   });
 
   onAuthStateChanged(auth, async user => {
     if (!user) { loginEl.hidden = false; appEl.hidden = true; return; }
     loginEl.hidden = true; appEl.hidden = false;
-    if (userEl) userEl.innerHTML = `${escapeHtml(user.email)} · <a href="#" id="logout">Sair</a>`;
+    const label = user.email?.toLowerCase() === "angeloruivo@gmail.com" ? `admin (${user.email})` : (user.email || "");
+    if (userEl) userEl.innerHTML = `${escapeHtml(label)} · <a href="#" id="logout">Sair</a>`;
     document.getElementById("logout")?.addEventListener("click", e => { e.preventDefault(); signOut(auth); });
     onReady?.(user);
   });

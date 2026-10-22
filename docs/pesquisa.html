@@ -29,6 +29,9 @@
   .stars input:checked~label{color:var(--star-on)}
   .stars label:hover,.stars label:hover~label{color:#ffd666!important}
   .stars input:focus-visible+label{outline:2px solid #3b82f6;border-radius:4px}
+  .q textarea{width:100%;padding:12px 14px;border:1px solid #cbd5e1;border-radius:10px;font-family:inherit;font-size:14px;color:var(--text);resize:vertical;min-height:90px;background:#fff}
+  .q textarea:focus{outline:2px solid #93c5fd;border-color:#3b82f6}
+  .q .opt-badge{display:inline-block;font-size:11px;font-weight:600;color:#475569;background:#e2e8f0;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle}
   .btn{width:100%;padding:16px;background:var(--navy);color:#fff;border:0;border-radius:10px;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit}
   .btn:hover{background:#13315c}.btn:disabled{opacity:.6;cursor:wait}
   .msg{text-align:center;padding:50px 36px}
@@ -66,6 +69,10 @@
     </div>
     <form id="form" novalidate>
       <div id="questions"></div>
+      <div class="q">
+        <p>4. Gostaria de registrar algum elogio ou sugestão para aprimorar o atendimento ou os serviços oferecidos pelo setor de Tecnologia? <span class="opt-badge">Opcional</span></p>
+        <textarea id="comment" name="comment" maxlength="1000" placeholder="Escreva aqui seu elogio, observação ou sugestão..."></textarea>
+      </div>
       <button class="btn" type="submit" id="submit">Confirmar Avaliação</button>
       <div class="err" id="err"></div>
     </form>
@@ -114,9 +121,11 @@ $("form").addEventListener("submit", async e => {
   const f = e.target, vals = {};
   for (const [k] of QUESTIONS) {
     const v = f.querySelector(`input[name="${k}"]:checked`);
-    if (!v) { $("err").textContent = "Por favor, responda as 3 perguntas."; return; }
+    if (!v) { $("err").textContent = "Por favor, avalie as 3 perguntas com estrelas."; return; }
     vals[k] = parseInt(v.value, 10);
   }
+  const commentText = $("comment").value.trim();
+  if (commentText) vals.comment = commentText;
   $("submit").disabled = true; $("err").textContent = "";
   try {
     await updateDoc(ref, { ...vals, status: "completed", completedAt: serverTimestamp() });

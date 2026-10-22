@@ -24,7 +24,7 @@
     <h2>Acesso da equipe de TI</h2>
     <p class="sub">Entre com seu usuário cadastrado no sistema.</p>
     <form>
-      <div class="field"><label class="f">E-mail</label><input class="f" name="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label class="f">Usuário ou E-mail</label><input class="f" name="email" type="text" placeholder="Ex.: admin" autocomplete="username" required></div>
       <div class="field"><label class="f">Senha</label><input class="f" name="password" type="password" autocomplete="current-password" required></div>
       <button class="btn btn-primary btn-block">Entrar</button>
       <div class="login-msg"></div>
@@ -68,15 +68,28 @@
     <div class="card"><h2>📊 Ranking de satisfação por escola</h2><p class="sub">Média das respostas (escolas com ao menos 1 resposta)</p><div class="chart-box" style="height:300px;overflow:auto"><canvas id="c-rank"></canvas></div></div>
   </div>
 
+  <!-- Quadro de Elogios e Sugestões (Pergunta 4) -->
+  <div class="card" style="margin-bottom:18px">
+    <h2>💬 Elogios e Sugestões das Escolas</h2>
+    <p class="sub">Respostas da pergunta aberta: "Gostaria de registrar algum elogio ou sugestão para aprimorar o atendimento ou os serviços oferecidos pelo setor de Tecnologia?"</p>
+    <div class="table-wrap" style="max-height:360px">
+      <table class="t">
+        <thead><tr><th style="width:140px">Data</th><th style="width:110px">OS</th><th style="width:80px">CIE</th><th style="width:220px">Escola</th><th style="width:80px">Média</th><th>Elogio / Sugestão Registrada</th></tr></thead>
+        <tbody id="comments-rows"></tbody>
+      </table>
+    </div>
+    <div class="hint" id="comments-count"></div>
+  </div>
+
   <!-- Tabela -->
   <div class="card">
     <div class="toolbar">
       <h2 style="margin-right:auto">📋 Histórico de pesquisas</h2>
-      <div class="field"><input class="f" id="t-search" placeholder="Buscar escola, CIE ou OS"></div>
+      <div class="field"><input class="f" id="t-search" placeholder="Buscar escola, CIE, OS ou sugestão"></div>
       <div class="field"><select class="f" id="t-status"><option value="">Todos os status</option><option value="completed">Respondidas</option><option value="pending">Pendentes</option></select></div>
     </div>
     <div class="table-wrap">
-      <table class="t"><thead><tr><th>Enviada em</th><th>OS</th><th>CIE</th><th>Escola</th><th>Status</th><th>Pontualidade</th><th>Técnica</th><th>Cortesia</th><th>Média</th><th>Respondida em</th></tr></thead>
+      <table class="t"><thead><tr><th>Enviada em</th><th>OS</th><th>CIE</th><th>Escola</th><th>Status</th><th>Pontualidade</th><th>Técnica</th><th>Cortesia</th><th>Média</th><th>Elogio / Sugestão</th><th>Respondida em</th></tr></thead>
       <tbody id="rows"></tbody></table>
     </div>
     <div class="hint" id="t-count"></div>
@@ -186,27 +199,45 @@ function render() {
       backgroundColor: rank.map(x => x.v >= 4 ? GREEN : x.v >= 3 ? GOLD : "#dc2626"), borderRadius: 6 }] },
     options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 5 } } } });
 
+  renderComments(data);
   renderTable(data);
+}
+
+function renderComments(data) {
+  const withComment = data.filter(s => s.comment && String(s.comment).trim());
+  $("comments-rows").innerHTML = withComment.map(s => `
+    <tr>
+      <td>${fmt(s.completed || s.created)}</td>
+      <td>${escapeHtml(s.os)}</td>
+      <td>${s.cie}</td>
+      <td><b>${escapeHtml(s.schoolName)}</b></td>
+      <td><b>${f1(s.mean)} ★</b></td>
+      <td style="white-space:pre-wrap;color:#0f172a;background:#f8fafc;border-left:3px solid #f5b301">${escapeHtml(s.comment)}</td>
+    </tr>`).join("") || `<tr><td colspan="6" style="text-align:center;color:#64748b;padding:24px">Nenhum elogio ou sugestão registrado no período selecionado.</td></tr>`;
+  $("comments-count").textContent = `${withComment.length} comentário(s) registrado(s)`;
 }
 
 function renderTable(data) {
   const q = $("t-search").value.trim().toLowerCase(), st = $("t-status").value;
-  const rows = data.filter(s => (!st || s.status === st) && (!q || `${s.schoolName} ${s.cie} ${s.os}`.toLowerCase().includes(q)));
+  const rows = data.filter(s => (!st || s.status === st) && (!q || `${s.schoolName} ${s.cie} ${s.os} ${s.comment || ""}`.toLowerCase().includes(q)));
   $("rows").innerHTML = rows.map(s => {
     const err = (s.emailStatus || "").startsWith("error");
     const tag = s.status === "completed" ? `<span class="tag tag-ok">Respondida</span>` : err ? `<span class="tag tag-err">Falha no e-mail</span>` : `<span class="tag tag-pend">Pendente</span>`;
+    const commentCell = s.comment && String(s.comment).trim()
+      ? `<div style="max-width:280px;white-space:pre-wrap;font-size:13px;color:#1e293b">${escapeHtml(s.comment)}</div>`
+      : `<span style="color:#94a3b8">–</span>`;
     return `<tr><td>${fmt(s.created)}</td><td>${escapeHtml(s.os)}</td><td>${s.cie}</td><td>${escapeHtml(s.schoolName)}</td><td>${tag}</td>
-      <td class="stars">${stars(s.q1)}</td><td class="stars">${stars(s.q2)}</td><td class="stars">${stars(s.q3)}</td><td><b>${f1(s.mean)}</b></td><td>${fmt(s.completed)}</td></tr>`;
-  }).join("") || `<tr><td colspan="10" style="text-align:center;color:#64748b;padding:30px">Nenhuma pesquisa encontrada.</td></tr>`;
+      <td class="stars">${stars(s.q1)}</td><td class="stars">${stars(s.q2)}</td><td class="stars">${stars(s.q3)}</td><td><b>${f1(s.mean)}</b></td><td>${commentCell}</td><td>${fmt(s.completed)}</td></tr>`;
+  }).join("") || `<tr><td colspan="11" style="text-align:center;color:#64748b;padding:30px">Nenhuma pesquisa encontrada.</td></tr>`;
   $("t-count").textContent = `${rows.length} registro(s)`;
 }
 
 function exportCsv() {
   const data = filtered();
-  const head = ["Enviada em", "OS", "Disparo", "CIE", "Escola", "E-mail", "Status", "Status e-mail", "Pontualidade", "Tecnica", "Cortesia", "Media", "Respondida em"];
+  const head = ["Enviada em", "OS", "Disparo", "CIE", "Escola", "E-mail", "Status", "Status e-mail", "Pontualidade", "Tecnica", "Cortesia", "Media", "Elogio / Sugestao", "Respondida em"];
   const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const lines = data.map(s => [fmt(s.created), s.os, s.campaign || "", s.cie, s.schoolName, s.email, s.status === "completed" ? "Respondida" : "Pendente",
-    s.emailStatus || "", s.q1 ?? "", s.q2 ?? "", s.q3 ?? "", s.mean != null ? s.mean.toFixed(2).replace(".", ",") : "", fmt(s.completed)].map(esc).join(";"));
+    s.emailStatus || "", s.q1 ?? "", s.q2 ?? "", s.q3 ?? "", s.mean != null ? s.mean.toFixed(2).replace(".", ",") : "", s.comment || "", fmt(s.completed)].map(esc).join(";"));
   const blob = new Blob(["\uFEFF" + [head.map(esc).join(";"), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
   const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `pesquisa_qualidade_${new Date().toISOString().slice(0, 10)}.csv` });
   a.click(); URL.revokeObjectURL(a.href);

@@ -24,7 +24,7 @@
     <h2>Acesso da equipe de TI</h2>
     <p class="sub">Entre com seu usuário cadastrado no sistema.</p>
     <form>
-      <div class="field"><label class="f">E-mail</label><input class="f" name="email" type="email" autocomplete="username" required></div>
+      <div class="field"><label class="f">Usuário ou E-mail</label><input class="f" name="email" type="text" placeholder="Ex.: admin" autocomplete="username" required></div>
       <div class="field"><label class="f">Senha</label><input class="f" name="password" type="password" autocomplete="current-password" required></div>
       <button class="btn btn-primary btn-block">Entrar</button>
       <div class="login-msg"></div>
@@ -47,6 +47,10 @@
           <input class="f" name="cie" list="schools" required inputmode="numeric" placeholder="Digite o CIE ou o nome">
           <datalist id="schools"></datalist>
           <div class="hint" id="cie-info">&nbsp;</div>
+        </div>
+        <div class="field">
+          <label class="f">E-mail para envio <span style="font-weight:400;color:#64748b">(opcional — digite manualmente se quiser enviar para outro e-mail)</span></label>
+          <input class="f" name="custom_email" type="email" placeholder="Deixe em branco para usar o e-mail oficial da escola">
         </div>
         <button class="btn btn-green btn-block" id="single-btn">Enviar pesquisa</button>
         <div id="single-msg"></div>
@@ -113,7 +117,8 @@ mountAuth({
 // Info do CIE digitado
 $("single").cie.addEventListener("input", e => {
   const s = findSchool(e.target.value);
-  $("cie-info").innerHTML = s ? `✅ <b>${escapeHtml(s.name)}</b> — ${s.email}` : (e.target.value ? "❌ CIE não encontrado" : "&nbsp;");
+  $("cie-info").innerHTML = s ? `✅ <b>${escapeHtml(s.name)}</b> — Padrão: ${s.email}` : (e.target.value ? "❌ CIE não encontrado" : "&nbsp;");
+  $("single").custom_email.placeholder = s ? `Padrão: ${s.email} (ou digite outro e-mail aqui)` : "Deixe em branco para usar o e-mail oficial da escola";
 });
 
 // Envio individual
@@ -121,9 +126,14 @@ $("single").addEventListener("submit", async e => {
   e.preventDefault();
   const f = e.target; $("single-btn").disabled = true; $("single-msg").innerHTML = alertBox("info", "Enviando...");
   try {
-    const { link, school } = await createAndSendSurvey({ cie: f.cie.value, osNumber: f.os.value });
-    $("single-msg").innerHTML = alertBox("ok", `✅ Pesquisa da OS <b>${escapeHtml(f.os.value)}</b> enviada para <b>${escapeHtml(school.name)}</b> (${school.email}).<br><a href="${link}" target="_blank">Abrir link da pesquisa</a>`);
+    const { link, school } = await createAndSendSurvey({
+      cie: f.cie.value,
+      osNumber: f.os.value,
+      customEmail: f.custom_email.value.trim() || null
+    });
+    $("single-msg").innerHTML = alertBox("ok", `✅ Pesquisa da OS <b>${escapeHtml(f.os.value)}</b> enviada para <b>${escapeHtml(school.name)}</b> (${escapeHtml(school.email)}).<br><a href="${link}" target="_blank">Abrir link da pesquisa</a>`);
     f.reset(); $("cie-info").innerHTML = "&nbsp;";
+    $("single").custom_email.placeholder = "Deixe em branco para usar o e-mail oficial da escola";
   } catch (err) {
     $("single-msg").innerHTML = alertBox("err", "❌ " + escapeHtml(err.message));
   } finally { $("single-btn").disabled = false; }
