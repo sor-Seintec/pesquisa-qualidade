@@ -14,10 +14,13 @@
   .wrap{width:100%;max-width:660px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.08)}
   .banner{height:260px;background:url('images/banner.jpg') center/cover;border-bottom:5px solid var(--gold)}
   .content{padding:36px}
-  .head{text-align:center;margin-bottom:26px}
-  .head h1{font-size:24px;color:var(--navy);margin-bottom:12px}
+  .head{text-align:center;margin-bottom:24px}
+  .head .sys-tag{display:inline-block;background:#eff6ff;color:#1e3a8a;border:1px solid #bfdbfe;padding:4px 12px;border-radius:99px;font-size:12px;font-weight:700;margin-bottom:10px}
+  .head h1{font-size:24px;color:var(--navy);margin-bottom:10px}
   .head p{color:var(--muted);line-height:1.6;font-size:15px}
   .head p b{color:var(--text)}
+  .custom-msg{background:#fffbeb;border:1px solid #fde68a;border-left:4px solid var(--gold);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:14px;color:#1e293b;line-height:1.5;white-space:pre-line}
+  .custom-msg small{display:block;font-size:11px;font-weight:700;text-transform:uppercase;color:#b45309;margin-bottom:4px;letter-spacing:.6px}
   .q{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:22px;margin-bottom:20px}
   .q p{font-weight:500;margin-bottom:14px;line-height:1.5}
   .scale{display:flex;align-items:center;justify-content:center;gap:12px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px;flex-wrap:wrap}
@@ -58,23 +61,28 @@
   <div id="done" class="msg" hidden>
     <div class="icon">✅</div>
     <h1>Obrigado pela sua avaliação!</h1>
-    <p>Sua resposta foi registrada com sucesso.<br>Ela nos ajuda a melhorar o suporte de tecnologia às escolas.<br><br>Você já pode fechar esta página.</p>
+    <p>Sua resposta foi registrada com sucesso.<br>Ela nos ajuda a melhorar continuamente nossos atendimentos e serviços.<br><br>Você já pode fechar esta página.</p>
   </div>
 
   <div id="form-area" class="content" hidden>
     <div class="head">
-      <h1>Pesquisa de Satisfação - TI</h1>
+      <div class="sys-tag" id="sys-badge">U.R.E. Sorocaba</div>
+      <h1>Pesquisa de Satisfação</h1>
       <p>Olá, <b id="school"></b>!</p>
-      <p>Por favor, avalie o atendimento referente à OS <b id="os"></b>.</p>
+      <p id="os-line">Por favor, avalie o atendimento referente a <b id="os"></b>.</p>
+    </div>
+    <div id="custom-msg-box" class="custom-msg" hidden>
+      <small>Mensagem / Observação</small>
+      <div id="custom-msg-text"></div>
     </div>
     <form id="form" novalidate>
       <div id="questions"></div>
       <div class="q">
-        <p>4. Gostaria de registrar algum elogio ou sugestão para aprimorar o atendimento ou os serviços oferecidos pelo setor de Tecnologia? <span class="opt-badge">Opcional</span></p>
+        <p><label for="comment">4. Gostaria de registrar algum elogio ou sugestão para aprimorar o atendimento ou os serviços oferecidos pelo setor de Tecnologia?</label> <span class="opt-badge">Opcional</span></p>
         <textarea id="comment" name="comment" maxlength="1000" placeholder="Escreva aqui seu elogio, observação ou sugestão..."></textarea>
       </div>
       <button class="btn" type="submit" id="submit">Confirmar Avaliação</button>
-      <div class="err" id="err"></div>
+      <div class="err" id="err" aria-live="polite"></div>
     </form>
   </div>
 
@@ -82,13 +90,13 @@
 </div>
 
 <script type="module">
-import { db } from "./js/app.js";
+import { db } from "./js/app.js?v=3";
 import { doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const QUESTIONS = [
   ["q1", "1. Como você avalia a <b>pontualidade e prontidão</b> do atendimento?"],
-  ["q2", "2. Como você avalia a <b>qualidade técnica e resolução</b> do problema?"],
-  ["q3", "3. Como você avalia a <b>cortesia e profissionalismo</b> do técnico?"]
+  ["q2", "2. Como você avalia a <b>qualidade técnica e resolução</b> da demanda?"],
+  ["q3", "3. Como você avalia a <b>cortesia e profissionalismo</b> da equipe?"]
 ];
 const $ = id => document.getElementById(id);
 const show = id => ["loading","invalid","done","form-area"].forEach(x => $(x).hidden = x !== id);
@@ -110,8 +118,13 @@ let ref;
     if (!snap.exists()) return show("invalid");
     const s = snap.data();
     if (s.status === "completed") return show("done");
-    $("school").textContent = s.schoolName;
-    $("os").textContent = s.os;
+    $("school").textContent = s.schoolName || "Unidade Escolar";
+    $("sys-badge").textContent = s.systemLabel || "Gestão de Agendamento";
+    $("os").textContent = s.os || s.systemLabel || "Atendimento";
+    if (s.customMessage && String(s.customMessage).trim()) {
+      $("custom-msg-text").textContent = String(s.customMessage).trim();
+      $("custom-msg-box").hidden = false;
+    }
     show("form-area");
   } catch (e) { console.error(e); show("invalid"); }
 })();

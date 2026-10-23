@@ -4,96 +4,350 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>Painel - Pesquisa de Qualidade TI | U.R.E. Sorocaba</title>
+<title>Hub de Conexão - Pesquisa de Qualidade | U.R.E. Sorocaba</title>
 <link rel="icon" href="images/logo_ure.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/style.css?v=3">
 </head>
 <body>
 <header class="topbar"><div class="topbar-inner">
   <img src="images/logo_ure.png" alt="U.R.E. Sorocaba">
-  <div class="brand"><b>U.R.E. SOROCABA</b><span>Pesquisa de Qualidade — Suporte de TI</span></div>
-  <nav><a href="index.html" class="active">Envio</a><a href="dashboard.html">Dashboard</a></nav>
+  <div class="brand"><b>U.R.E. SOROCABA</b><span>Hub de Conexão — Pesquisa de Qualidade</span></div>
+  <nav><a href="index.html" class="active">Hub de Envio</a><a href="dashboard.html">Dashboard</a></nav>
   <div class="userbar" id="user"></div>
 </div></header>
 
 <!-- LOGIN -->
 <section id="login" class="login-wrap" hidden>
   <div class="card login-card">
-    <img src="images/logo_ure.png" alt="">
-    <h2>Acesso da equipe de TI</h2>
+    <img src="images/logo_ure.png" alt="Logo U.R.E. Sorocaba">
+    <h2>Acesso ao Hub de Pesquisa</h2>
     <p class="sub">Entre com seu usuário cadastrado no sistema.</p>
-    <form>
-      <div class="field"><label class="f">Usuário ou E-mail</label><input class="f" name="email" type="text" placeholder="Ex.: admin" autocomplete="username" required></div>
-      <div class="field"><label class="f">Senha</label><input class="f" name="password" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-primary btn-block">Entrar</button>
-      <div class="login-msg"></div>
+    <form id="login-form">
+      <div class="field">
+        <label class="f" for="login-email">Usuário ou E-mail</label>
+        <input class="f" id="login-email" name="email" type="text" placeholder="Ex.: admin" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <label class="f" for="login-password">Senha</label>
+        <input class="f" id="login-password" name="password" type="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      <div class="login-msg" aria-live="polite"></div>
       <p style="text-align:center;font-size:13px;margin-top:6px"><a href="#" class="forgot">Esqueci minha senha</a></p>
     </form>
   </div>
 </section>
 
-<!-- APP -->
+<!-- APP: HUB DE CONEXÃO -->
 <main id="app" class="container" hidden>
-  <div class="grid grid-2">
 
-    <!-- Envio individual -->
-    <div class="card">
-      <h2>📨 Enviar pesquisa de um atendimento</h2>
-      <p class="sub">Informe o número da OS e o CIE da escola atendida. O e-mail é enviado na hora.</p>
-      <form id="single">
-        <div class="field"><label class="f">Número da OS</label><input class="f" name="os" required placeholder="Ex.: 2026-001234"></div>
-        <div class="field"><label class="f">CIE da escola</label>
-          <input class="f" name="cie" list="schools" required inputmode="numeric" placeholder="Digite o CIE ou o nome">
-          <datalist id="schools"></datalist>
-          <div class="hint" id="cie-info">&nbsp;</div>
-        </div>
+  <datalist id="schools"></datalist>
+
+  <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,#0b2545 0%,#13315c 100%);color:#fff;border:0">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div>
+        <h2 style="color:#fff;margin-bottom:4px">🔗 Hub de Conexão — Disparo de Pesquisa de Qualidade</h2>
+        <p class="sub" style="color:#cbd5e1;margin:0">Central unificada para envio de pesquisas dos sistemas <b>Gestão de Agendamento</b>, <b>PEC</b>, <b>Supervisor</b> e <b>Envio Avulso</b>, com banco inteligente de grupos de e-mails.</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <a href="#sec-groups" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff">📇 Banco de E-mails (<span id="total-saved-count">0</span>)</a>
+        <a href="#sec-config" class="btn btn-sm" style="background:#f5b301;color:#0b2545">⚙️ Link Power Automate</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 CARDS DOS SISTEMAS DO HUB -->
+  <div class="grid grid-2" style="margin-bottom:18px">
+
+    <!-- =================================================================
+         CARD 1: SISTEMA GESTÃO DE AGENDAMENTO
+         Regra: Obrigar CIE e Ordem de Serviço (Referente à Escola)
+         ================================================================= -->
+    <div class="card hub-card sys-agendamento">
+      <h2>🛠️ Sistema Gestão de Agendamento</h2>
+      <div class="rule-badge">📌 Regra: Obrigar CIE da Escola e Ordem de Serviço</div>
+      <p class="sub">Envio vinculado às Ordens de Serviço das unidades escolares. Sugere salvar novos e-mails no grupo para futuros envios em lote.</p>
+
+      <form id="form-agendamento" novalidate>
         <div class="field">
-          <label class="f">E-mail para envio <span style="font-weight:400;color:#64748b">(opcional — digite manualmente se quiser enviar para outro e-mail)</span></label>
-          <input class="f" name="custom_email" type="email" placeholder="Deixe em branco para usar o e-mail oficial da escola">
+          <label class="f" for="ag-os">Ordem de Serviço (OS) *</label>
+          <input class="f" id="ag-os" name="os" type="text" required autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Ex.: 2026-001234">
         </div>
-        <button class="btn btn-green btn-block" id="single-btn">Enviar pesquisa</button>
-        <div id="single-msg"></div>
+
+        <div class="field">
+          <label class="f" for="ag-cie">CIE da Escola * <span class="opt">(digite o CIE ou nome da escola)</span></label>
+          <input class="f" id="ag-cie" name="cie" type="text" list="schools" required autocorrect="off" spellcheck="false" placeholder="Ex.: 16093 ou nome da escola">
+          <div class="hint" id="ag-cie-info">&nbsp;</div>
+        </div>
+
+        <div class="field">
+          <label class="f" for="ag-mode">Destino do Envio (E-mail da Escola ou Lote do Grupo)</label>
+          <select class="f" id="ag-mode" name="mode">
+            <option value="single">Enviar para a escola selecionada (padrão ou e-mail abaixo)</option>
+            <option value="group">📦 Lote: Enviar para todo o Grupo "Gestão de Agendamento" (0)</option>
+            <option value="all_schools">🏫 Lote: Enviar para Todas as 80 Escolas Oficiais</option>
+            <option value="test_only">🧪 Simulação: Somente Escola de Teste (CIE 2110)</option>
+          </select>
+        </div>
+
+        <div class="field" id="ag-email-wrap">
+          <label class="f" for="ag-email">Incluir E-mail Manual / Adicional <span class="opt">(opcional — deixe vazio para usar o oficial da escola)</span></label>
+          <input class="f" id="ag-email" name="email" type="text" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Deixe em branco para usar o e-mail oficial da escola">
+          <div class="hint">Você pode informar 1 ou mais e-mails separados por vírgula ou ponto-e-vírgula.</div>
+          <div id="ag-chips" class="chip-list"></div>
+        </div>
+
+        <!-- Sugestão para salvar no grupo -->
+        <div id="ag-suggest" class="save-suggest" hidden>
+          <div>💡 Novo(s) e-mail(s) detectado(s) para <b>Gestão de Agendamento</b>: <b id="ag-suggest-list"></b></div>
+          <div class="save-suggest-row">
+            <label for="ag-save-chk"><input type="checkbox" id="ag-save-chk" checked> Salvar no grupo para facilitar envio futuro em lote</label>
+            <button type="button" class="btn btn-sm btn-light" id="ag-save-now">💾 Salvar agora</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="ag-btn">Enviar Pesquisa — Gestão de Agendamento</button>
+        <div id="ag-progress" hidden>
+          <div class="progress"><div id="ag-bar"></div></div>
+          <div class="hint" id="ag-status"></div>
+          <div class="log" id="ag-log"></div>
+        </div>
+        <div id="ag-msg" aria-live="polite"></div>
       </form>
     </div>
 
-    <!-- Disparo em massa -->
-    <div class="card">
-      <h2>📢 Disparo para todas as escolas</h2>
-      <p class="sub">Cria uma pesquisa para cada escola da lista e envia os e-mails em sequência.</p>
-      <div class="field"><label class="f">Identificação do disparo (aparece como "OS" no e-mail)</label>
-        <input class="f" id="mass-os" placeholder="Ex.: PESQUISA-GERAL-OUT-2026"></div>
-      <div class="field" style="display:flex;gap:8px;align-items:center">
-        <input type="checkbox" id="mass-test" style="width:18px;height:18px">
-        <label for="mass-test" style="font-size:14px">Incluir a escola de teste (CIE 2110)</label>
+    <!-- =================================================================
+         CARD 2: SISTEMA DO PEC
+         Regra: Apenas campo opcional de Mensagem e incluir e-mail ou grupo de e-mail (Referência: Escola)
+         ================================================================= -->
+    <div class="card hub-card sys-pec">
+      <h2>📚 Sistema do PEC</h2>
+      <div class="rule-badge">📌 Regra: Mensagem Opcional + E-mail ou Grupo de E-mail (Escola)</div>
+      <p class="sub">Disparo de pesquisa de qualidade referente às escolas atendidas pelo PEC. Ao incluir um e-mail novo, salve-o no grupo do PEC para envios em lote.</p>
+
+      <form id="form-pec" novalidate>
+        <div class="field">
+          <label class="f" for="pec-mode">Selecionar Grupo de E-mail ou Envio Individual</label>
+          <select class="f" id="pec-mode" name="mode">
+            <option value="custom">Digitar e-mail(s) ou selecionar escola abaixo</option>
+            <option value="group">📦 Enviar em lote para todo o Grupo do PEC (0)</option>
+            <option value="all_schools">🏫 Enviar em lote para Todas as 80 Escolas Oficiais</option>
+            <option value="test_only">🧪 Simulação: Somente Escola de Teste (CIE 2110)</option>
+          </select>
+        </div>
+
+        <div class="field" id="pec-school-wrap">
+          <label class="f" for="pec-cie">Escola de Referência <span class="opt">(opcional — selecione para puxar o e-mail da escola)</span></label>
+          <input class="f" id="pec-cie" name="cie" type="text" list="schools" autocorrect="off" spellcheck="false" placeholder="Opcional: digite CIE ou nome da escola para preencher o e-mail">
+          <div class="hint" id="pec-cie-info">&nbsp;</div>
+        </div>
+
+        <div class="field" id="pec-email-wrap">
+          <label class="f" for="pec-email">E-mail(s) de Destino * <span class="opt">(separe vários por vírgula ou clique nos salvos)</span></label>
+          <input class="f" id="pec-email" name="email" type="text" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Ex.: e016093a@educacao.sp.gov.br, pec@educacao.sp.gov.br">
+          <div id="pec-chips" class="chip-list"></div>
+        </div>
+
+        <!-- Sugestão para salvar no grupo PEC -->
+        <div id="pec-suggest" class="save-suggest" hidden>
+          <div>💡 Novo(s) e-mail(s) não cadastrado(s) no <b>Grupo do PEC</b>: <b id="pec-suggest-list"></b></div>
+          <div class="save-suggest-row">
+            <label for="pec-save-chk"><input type="checkbox" id="pec-save-chk" checked> Salvar no Grupo do PEC para envio futuro em lote</label>
+            <button type="button" class="btn btn-sm btn-light" id="pec-save-now">💾 Salvar agora</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="f" for="pec-message">Mensagem <span class="opt">(Opcional)</span></label>
+          <textarea class="f" id="pec-message" name="message" placeholder="Opcional: escreva uma mensagem ou contexto que aparecerá no e-mail e na pesquisa..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-blue btn-block" id="pec-btn">Enviar Pesquisa — Sistema do PEC</button>
+        <div id="pec-progress" hidden>
+          <div class="progress"><div id="pec-bar"></div></div>
+          <div class="hint" id="pec-status"></div>
+          <div class="log" id="pec-log"></div>
+        </div>
+        <div id="pec-msg" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <!-- =================================================================
+         CARD 3: SISTEMA SUPERVISOR
+         Regra: Apenas campo opcional de Mensagem e incluir e-mail ou grupo de e-mail (Referência: Escola)
+         ================================================================= -->
+    <div class="card hub-card sys-supervisor">
+      <h2>🧭 Sistema Supervisor</h2>
+      <div class="rule-badge">📌 Regra: Mensagem Opcional + E-mail ou Grupo de E-mail (Escola)</div>
+      <p class="sub">Disparo de pesquisa de qualidade referente às unidades escolares acompanhadas pela Supervisão. Permite salvar e-mails no grupo Supervisor para lote.</p>
+
+      <form id="form-supervisor" novalidate>
+        <div class="field">
+          <label class="f" for="sup-mode">Selecionar Grupo de E-mail ou Envio Individual</label>
+          <select class="f" id="sup-mode" name="mode">
+            <option value="custom">Digitar e-mail(s) ou selecionar escola abaixo</option>
+            <option value="group">📦 Enviar em lote para todo o Grupo Supervisor (0)</option>
+            <option value="all_schools">🏫 Enviar em lote para Todas as 80 Escolas Oficiais</option>
+            <option value="test_only">🧪 Simulação: Somente Escola de Teste (CIE 2110)</option>
+          </select>
+        </div>
+
+        <div class="field" id="sup-school-wrap">
+          <label class="f" for="sup-cie">Escola de Referência <span class="opt">(opcional — selecione para puxar o e-mail da escola)</span></label>
+          <input class="f" id="sup-cie" name="cie" type="text" list="schools" autocorrect="off" spellcheck="false" placeholder="Opcional: digite CIE ou nome da escola para preencher o e-mail">
+          <div class="hint" id="sup-cie-info">&nbsp;</div>
+        </div>
+
+        <div class="field" id="sup-email-wrap">
+          <label class="f" for="sup-email">E-mail(s) de Destino * <span class="opt">(separe vários por vírgula ou clique nos salvos)</span></label>
+          <input class="f" id="sup-email" name="email" type="text" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Ex.: e016093a@educacao.sp.gov.br, supervisor@educacao.sp.gov.br">
+          <div id="sup-chips" class="chip-list"></div>
+        </div>
+
+        <!-- Sugestão para salvar no grupo Supervisor -->
+        <div id="sup-suggest" class="save-suggest" hidden>
+          <div>💡 Novo(s) e-mail(s) não cadastrado(s) no <b>Grupo Supervisor</b>: <b id="sup-suggest-list"></b></div>
+          <div class="save-suggest-row">
+            <label for="sup-save-chk"><input type="checkbox" id="sup-save-chk" checked> Salvar no Grupo Supervisor para envio futuro em lote</label>
+            <button type="button" class="btn btn-sm btn-light" id="sup-save-now">💾 Salvar agora</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="f" for="sup-message">Mensagem <span class="opt">(Opcional)</span></label>
+          <textarea class="f" id="sup-message" name="message" placeholder="Opcional: escreva uma mensagem ou contexto que aparecerá no e-mail e na pesquisa..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-purple btn-block" id="sup-btn">Enviar Pesquisa — Sistema Supervisor</button>
+        <div id="sup-progress" hidden>
+          <div class="progress"><div id="sup-bar"></div></div>
+          <div class="hint" id="sup-status"></div>
+          <div class="log" id="sup-log"></div>
+        </div>
+        <div id="sup-msg" aria-live="polite"></div>
+      </form>
+    </div>
+
+    <!-- =================================================================
+         CARD 4: ENVIO AVULSO
+         Regra: Incluir apenas campo de e-mail (ou grupo) e campo personalizável / mensagem opcional
+         ================================================================= -->
+    <div class="card hub-card sys-avulso">
+      <h2>✉️ Envio Avulso</h2>
+      <div class="rule-badge">📌 Regra: E-mail ou Grupo de E-mail + Campo Personalizável / Mensagem Opcional</div>
+      <p class="sub">Envio livre de pesquisa para qualquer destinatário ou grupo, sem exigir vínculo com escola ou número de O.S.</p>
+
+      <form id="form-avulso" novalidate>
+        <div class="field">
+          <label class="f" for="av-mode">Selecionar Grupo de E-mail ou Digitar Manualmente</label>
+          <select class="f" id="av-mode" name="mode">
+            <option value="custom">Digitar e-mail(s) manualmente abaixo</option>
+            <option value="group">📦 Enviar em lote para todo o Grupo Avulso (0)</option>
+            <option value="pec_group">📦 Enviar para o Grupo do PEC</option>
+            <option value="sup_group">📦 Enviar para o Grupo Supervisor</option>
+            <option value="ag_group">📦 Enviar para o Grupo Gestão de Agendamento</option>
+          </select>
+        </div>
+
+        <div class="field" id="av-email-wrap">
+          <label class="f" for="av-email">E-mail(s) de Destino * <span class="opt">(1 ou vários separados por vírgula)</span></label>
+          <input class="f" id="av-email" name="email" type="text" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Digite o(s) e-mail(s) de destino...">
+          <div id="av-chips" class="chip-list"></div>
+        </div>
+
+        <!-- Sugestão para salvar no grupo Avulso -->
+        <div id="av-suggest" class="save-suggest" hidden>
+          <div>💡 Novo(s) e-mail(s) detectado(s): <b id="av-suggest-list"></b></div>
+          <div class="save-suggest-row">
+            <label for="av-save-chk"><input type="checkbox" id="av-save-chk"> Salvar no Grupo Avulso para facilitar envio futuro em lote</label>
+            <button type="button" class="btn btn-sm btn-light" id="av-save-now">💾 Salvar agora</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="f" for="av-title">Campo Personalizável — Identificação / Setor <span class="opt">(Opcional)</span></label>
+          <input class="f" id="av-title" name="title" type="text" placeholder="Opcional: Ex.: Atendimento U.R.E. / Formação / Evento">
+        </div>
+
+        <div class="field">
+          <label class="f" for="av-message">Mensagem <span class="opt">(Opcional)</span></label>
+          <textarea class="f" id="av-message" name="message" placeholder="Opcional: escreva uma mensagem personalizada para o destinatário..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-teal btn-block" id="av-btn">Enviar Pesquisa — Avulso</button>
+        <div id="av-progress" hidden>
+          <div class="progress"><div id="av-bar"></div></div>
+          <div class="hint" id="av-status"></div>
+          <div class="log" id="av-log"></div>
+        </div>
+        <div id="av-msg" aria-live="polite"></div>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- SEÇÃO INFERIOR: BANCO DE E-MAILS/GRUPOS + CONFIGURAÇÃO DO LINK POWER AUTOMATE -->
+  <div class="grid grid-2">
+
+    <!-- =================================================================
+         CARD 5: BANCO DE CADASTRO DE E-MAILS E GRUPOS (FIRESTORE)
+         ================================================================= -->
+    <div class="card" id="sec-groups">
+      <h2>📇 Banco de Cadastro de E-mails & Grupos</h2>
+      <p class="sub">Gerencie os grupos de e-mails salvos de cada sistema (<b>Gestão de Agendamento</b>, <b>PEC</b>, <b>Supervisor</b> e <b>Avulso</b>) e consulte os e-mails oficiais das 80 escolas.</p>
+
+      <div class="tabs" id="grp-tabs">
+        <button type="button" class="tab-btn active" data-grp="pec">📚 Grupo PEC <span class="cnt" id="cnt-pec">0</span></button>
+        <button type="button" class="tab-btn" data-grp="supervisor">🧭 Grupo Supervisor <span class="cnt" id="cnt-supervisor">0</span></button>
+        <button type="button" class="tab-btn" data-grp="agendamento">🛠️ Grupo Agendamento <span class="cnt" id="cnt-agendamento">0</span></button>
+        <button type="button" class="tab-btn" data-grp="avulso">✉️ Grupo Avulso <span class="cnt" id="cnt-avulso">0</span></button>
+        <button type="button" class="tab-btn" data-grp="schools">🏫 80 Escolas Oficiais</button>
       </div>
-      <div class="field" style="display:flex;gap:8px;align-items:center">
-        <input type="checkbox" id="mass-only-test" style="width:18px;height:18px">
-        <label for="mass-only-test" style="font-size:14px">Simulação: enviar <b>somente</b> para a escola de teste</label>
-      </div>
-      <button class="btn btn-primary btn-block" id="mass-btn">Iniciar disparo</button>
-      <div id="mass-area" hidden>
-        <div class="progress"><div id="mass-bar"></div></div>
-        <div class="hint" id="mass-status"></div>
-        <div class="log" id="mass-log"></div>
+
+      <!-- Formulário para adicionar novos e-mails ao grupo selecionado -->
+      <form id="grp-add-form" style="background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px" novalidate>
+        <div class="field" style="margin-bottom:8px">
+          <label class="f" for="grp-new-email">Adicionar e-mail(s) ao <b id="grp-active-name">Grupo do PEC</b></label>
+          <input class="f" id="grp-new-email" type="text" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Digite 1 ou mais e-mails separados por vírgula...">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <input class="f" id="grp-new-cie" type="text" list="schools" autocorrect="off" spellcheck="false" placeholder="Escola/CIE vinculada (opcional)" style="flex:1;min-width:180px;padding:8px 12px;font-size:13.5px">
+          <button type="submit" class="btn btn-sm btn-green" style="padding:9px 14px">+ Salvar no Grupo</button>
+        </div>
+        <div id="grp-add-msg" aria-live="polite"></div>
+      </form>
+
+      <div class="table-wrap" style="max-height:260px">
+        <table class="t">
+          <thead><tr><th>CIE</th><th>Escola / Referência</th><th>E-mail</th><th style="width:80px;text-align:right">Ação</th></tr></thead>
+          <tbody id="grp-table-body"></tbody>
+        </table>
       </div>
     </div>
 
-    <!-- Configuração -->
-    <div class="card">
+    <!-- =================================================================
+         CARD 6: CONFIGURAÇÃO (SALVAR LINK DO POWER AUTOMATE)
+         Mantido conforme solicitado para facilitar futuras trocas de e-mail
+         ================================================================= -->
+    <div class="card" id="sec-config">
       <h2>⚙️ Configuração</h2>
-      <p class="sub">URL do fluxo do Power Automate ("Quando uma solicitação HTTP é recebida"). Fica salva com segurança no Firebase, visível só para administradores.</p>
-      <div class="field"><label class="f">URL do Power Automate</label><input class="f" id="webhook" placeholder="https://...powerplatform.com/...&sig=..."></div>
-      <button class="btn btn-light" id="save-webhook">Salvar URL</button>
-      <div id="cfg-msg"></div>
-    </div>
+      <p class="sub">URL do fluxo do Power Automate ("Quando uma solicitação HTTP é recebida"). Fica salva com segurança no Firebase, visível só para administradores. Facilita caso precise trocar o e-mail disparador no futuro.</p>
 
-    <!-- Lista de e-mails -->
-    <div class="card">
-      <h2>🏫 Escolas e e-mails gerados</h2>
-      <p class="sub">Regra: <code>e</code> + CIE com 6 dígitos + <code id="suffix"></code> + <code>@educacao.sp.gov.br</code></p>
-      <div class="table-wrap" style="max-height:300px">
-        <table class="t"><thead><tr><th>CIE</th><th>Escola</th><th>E-mail</th></tr></thead><tbody id="school-list"></tbody></table>
+      <div class="field">
+        <label class="f" for="webhook">URL do Power Automate</label>
+        <input class="f" id="webhook" type="url" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="https://...powerplatform.com/...&sig=...">
+      </div>
+      <div>
+        <button type="button" class="btn btn-light" id="save-webhook">Salvar URL</button>
+      </div>
+      <div id="cfg-msg" aria-live="polite"></div>
+
+      <hr style="border:0;border-top:1px solid var(--border);margin:20px 0">
+      <div class="hint">
+        <b>ℹ️ Regra oficial dos e-mails das escolas:</b><br>
+        <code>e</code> + CIE com 6 dígitos (zero à esquerda quando 5 dígitos) + <code id="suffix"></code> + <code>@educacao.sp.gov.br</code><br>
+        Escola de teste: CIE <code>2110</code> &rarr; <code>angeloruivo@gmail.com</code>
       </div>
     </div>
 
@@ -101,74 +355,591 @@
 </main>
 
 <script type="module">
-import { SCHOOLS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX, createAndSendSurvey, getWebhookUrl, saveWebhookUrl, mountAuth, escapeHtml } from "./js/app.js?v=2";
+import {
+  SCHOOLS, SYSTEMS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX,
+  createAndSendSurvey, getWebhookUrl, saveWebhookUrl,
+  getEmailGroups, saveEmailsToGroup, removeEmailFromGroup, findUnsavedEmails, parseEmailList,
+  mountAuth, escapeHtml
+} from "./js/app.js?v=3";
+
 const $ = id => document.getElementById(id);
 const alertBox = (type, html) => `<div class="alert alert-${type}">${html}</div>`;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-$("schools").innerHTML = SCHOOLS.map(s => `<option value="${s.cie}">${escapeHtml(s.name)}</option>`).join("");
-$("school-list").innerHTML = SCHOOLS.map(s => `<tr><td>${s.cie}</td><td>${escapeHtml(s.name)}</td><td>${schoolEmail(s.cie)}</td></tr>`).join("");
-$("suffix").textContent = EMAIL_SUFFIX ? `"${EMAIL_SUFFIX}"` : '(sem sufixo)';
+// Popula datalist de escolas
+$("schools").innerHTML = SCHOOLS.map(s => `<option value="${s.cie}">${escapeHtml(s.name)} (${s.email || schoolEmail(s.cie)})</option>`).join("");
+$("suffix").textContent = EMAIL_SUFFIX ? `"${EMAIL_SUFFIX}"` : "(sem sufixo)";
 
+let EMAIL_GROUPS = { agendamento: [], pec: [], supervisor: [], avulso: [] };
+let activeGroupTab = "pec";
+
+// Inicializa autenticação e carrega configurações + banco de e-mails
 mountAuth({
-  loginEl: $("login"), appEl: $("app"), userEl: $("user"),
-  onReady: async () => { try { $("webhook").value = await getWebhookUrl(); } catch {} }
+  loginEl: $("login"),
+  appEl: $("app"),
+  userEl: $("user"),
+  onReady: async () => {
+    try { $("webhook").value = await getWebhookUrl(); } catch {}
+    await refreshGroupsUI(true);
+  }
 });
 
-// Info do CIE digitado
-$("single").cie.addEventListener("input", e => {
-  const s = findSchool(e.target.value);
-  $("cie-info").innerHTML = s ? `✅ <b>${escapeHtml(s.name)}</b> — Padrão: ${s.email}` : (e.target.value ? "❌ CIE não encontrado" : "&nbsp;");
-  $("single").custom_email.placeholder = s ? `Padrão: ${s.email} (ou digite outro e-mail aqui)` : "Deixe em branco para usar o e-mail oficial da escola";
+// =====================================================================
+// ATUALIZAÇÃO DO BANCO DE E-MAILS E GRUPOS NA TELA
+// =====================================================================
+async function refreshGroupsUI(force = false) {
+  EMAIL_GROUPS = await getEmailGroups(force);
+  const counts = {
+    agendamento: EMAIL_GROUPS.agendamento.length,
+    pec: EMAIL_GROUPS.pec.length,
+    supervisor: EMAIL_GROUPS.supervisor.length,
+    avulso: EMAIL_GROUPS.avulso.length
+  };
+  $("cnt-agendamento").textContent = counts.agendamento;
+  $("cnt-pec").textContent = counts.pec;
+  $("cnt-supervisor").textContent = counts.supervisor;
+  $("cnt-avulso").textContent = counts.avulso;
+  $("total-saved-count").textContent = counts.agendamento + counts.pec + counts.supervisor + counts.avulso;
+
+  // Atualiza textos dos selects de lote nos 4 cards
+  $("ag-mode").querySelector('option[value="group"]').textContent = `📦 Lote: Enviar para todo o Grupo "Gestão de Agendamento" (${counts.agendamento} salvos)`;
+  $("pec-mode").querySelector('option[value="group"]').textContent = `📦 Enviar em lote para todo o Grupo do PEC (${counts.pec} salvos)`;
+  $("sup-mode").querySelector('option[value="group"]').textContent = `📦 Enviar em lote para todo o Grupo Supervisor (${counts.supervisor} salvos)`;
+  $("av-mode").querySelector('option[value="group"]').textContent = `📦 Enviar em lote para todo o Grupo Avulso (${counts.avulso} salvos)`;
+  $("av-mode").querySelector('option[value="pec_group"]').textContent = `📦 Enviar em lote para o Grupo do PEC (${counts.pec} salvos)`;
+  $("av-mode").querySelector('option[value="sup_group"]').textContent = `📦 Enviar em lote para o Grupo Supervisor (${counts.supervisor} salvos)`;
+  $("av-mode").querySelector('option[value="ag_group"]').textContent = `📦 Enviar em lote para o Grupo Gestão de Agendamento (${counts.agendamento} salvos)`;
+
+  renderGroupChips("agendamento", "ag-chips", "ag-email", $("ag-cie").value);
+  renderGroupChips("pec", "pec-chips", "pec-email", $("pec-cie").value);
+  renderGroupChips("supervisor", "sup-chips", "sup-email", $("sup-cie").value);
+  renderGroupChips("avulso", "av-chips", "av-email", "");
+
+  renderGroupTable();
+}
+
+function renderGroupChips(groupKey, containerId, inputId, filterCie = "") {
+  const list = EMAIL_GROUPS[groupKey] || [];
+  const school = filterCie ? findSchool(filterCie) : null;
+  const prioritized = school
+    ? [...list.filter(x => x.cie === school.cie), ...list.filter(x => x.cie !== school.cie)]
+    : list;
+  const shown = prioritized.slice(0, 8);
+  const el = $(containerId);
+  if (!shown.length) { el.innerHTML = ""; return; }
+  el.innerHTML = `<span style="font-size:11.5px;color:#64748b;align-self:center">Salvos no grupo (clique para incluir):</span>` +
+    shown.map(item => {
+      const tag = item.schoolName ? `${escapeHtml(item.schoolName.slice(0, 18))}… (${escapeHtml(item.email)})` : escapeHtml(item.email);
+      return `<button type="button" class="chip" data-add-email="${escapeHtml(item.email)}" data-target="${inputId}">+ ${tag}</button>`;
+    }).join("");
+}
+
+document.addEventListener("click", e => {
+  const chip = e.target.closest("[data-add-email]");
+  if (!chip) return;
+  const email = chip.getAttribute("data-add-email");
+  const input = $(chip.getAttribute("data-target"));
+  if (!input) return;
+  const cur = parseEmailList(input.value).valid;
+  if (!cur.includes(email.toLowerCase())) {
+    input.value = [...cur, email].join(", ");
+    input.dispatchEvent(new Event("input"));
+  }
 });
 
-// Envio individual
-$("single").addEventListener("submit", async e => {
-  e.preventDefault();
-  const f = e.target; $("single-btn").disabled = true; $("single-msg").innerHTML = alertBox("info", "Enviando...");
-  try {
-    const { link, school } = await createAndSendSurvey({
-      cie: f.cie.value,
-      osNumber: f.os.value,
-      customEmail: f.custom_email.value.trim() || null
+// =====================================================================
+// DETECÇÃO E SUGESTÃO DE NOVOS E-MAILS NOS 4 CARDS
+// =====================================================================
+function wireCardEmailSuggestion({ groupKey, emailInputId, cieInputId, suggestBoxId, suggestListId, saveNowBtnId, chipsId }) {
+  const emailInput = $(emailInputId);
+  const cieInput = cieInputId ? $(cieInputId) : null;
+  const suggestBox = $(suggestBoxId);
+  const suggestList = $(suggestListId);
+  const saveNowBtn = $(saveNowBtnId);
+
+  const checkUnsaved = () => {
+    const { valid } = parseEmailList(emailInput.value);
+    const unsaved = findUnsavedEmails(groupKey, valid, EMAIL_GROUPS);
+    if (unsaved.length > 0) {
+      suggestList.textContent = unsaved.join(", ");
+      suggestBox.hidden = false;
+    } else {
+      suggestBox.hidden = true;
+    }
+  };
+
+  emailInput.addEventListener("input", checkUnsaved);
+  emailInput.addEventListener("blur", checkUnsaved);
+
+  if (cieInput) {
+    cieInput.addEventListener("input", () => {
+      if (chipsId) renderGroupChips(groupKey, chipsId, emailInputId, cieInput.value);
     });
-    $("single-msg").innerHTML = alertBox("ok", `✅ Pesquisa da OS <b>${escapeHtml(f.os.value)}</b> enviada para <b>${escapeHtml(school.name)}</b> (${escapeHtml(school.email)}).<br><a href="${link}" target="_blank">Abrir link da pesquisa</a>`);
-    f.reset(); $("cie-info").innerHTML = "&nbsp;";
-    $("single").custom_email.placeholder = "Deixe em branco para usar o e-mail oficial da escola";
-  } catch (err) {
-    $("single-msg").innerHTML = alertBox("err", "❌ " + escapeHtml(err.message));
-  } finally { $("single-btn").disabled = false; }
+  }
+
+  saveNowBtn.addEventListener("click", async () => {
+    const { valid } = parseEmailList(emailInput.value);
+    const unsaved = findUnsavedEmails(groupKey, valid, EMAIL_GROUPS);
+    if (!unsaved.length) return;
+    const school = cieInput ? findSchool(cieInput.value) : null;
+    saveNowBtn.disabled = true;
+    saveNowBtn.textContent = "Salvando...";
+    try {
+      await saveEmailsToGroup(groupKey, unsaved.map(email => ({
+        email,
+        cie: school?.cie || "",
+        schoolName: school?.name || ""
+      })));
+      await refreshGroupsUI(true);
+      checkUnsaved();
+    } finally {
+      saveNowBtn.disabled = false;
+      saveNowBtn.textContent = "💾 Salvar agora";
+    }
+  });
+
+  return { checkUnsaved };
+}
+
+wireCardEmailSuggestion({ groupKey: "agendamento", emailInputId: "ag-email", cieInputId: "ag-cie", suggestBoxId: "ag-suggest", suggestListId: "ag-suggest-list", saveNowBtnId: "ag-save-now", chipsId: "ag-chips" });
+wireCardEmailSuggestion({ groupKey: "pec", emailInputId: "pec-email", cieInputId: "pec-cie", suggestBoxId: "pec-suggest", suggestListId: "pec-suggest-list", saveNowBtnId: "pec-save-now", chipsId: "pec-chips" });
+wireCardEmailSuggestion({ groupKey: "supervisor", emailInputId: "sup-email", cieInputId: "sup-cie", suggestBoxId: "sup-suggest", suggestListId: "sup-suggest-list", saveNowBtnId: "sup-save-now", chipsId: "sup-chips" });
+wireCardEmailSuggestion({ groupKey: "avulso", emailInputId: "av-email", cieInputId: null, suggestBoxId: "av-suggest", suggestListId: "av-suggest-list", saveNowBtnId: "av-save-now", chipsId: "av-chips" });
+
+// =====================================================================
+// AUXILIARES DE SELEÇÃO DE ESCOLA E MODO DE ENVIO
+// =====================================================================
+$("ag-cie").addEventListener("input", e => {
+  const s = findSchool(e.target.value);
+  $("ag-cie-info").innerHTML = s
+    ? `✅ <b>${escapeHtml(s.name)}</b> — E-mail oficial: <code>${s.email}</code>`
+    : (e.target.value.trim() ? "❌ CIE não encontrado na lista de 80 escolas" : "&nbsp;");
+  $("ag-email").placeholder = s
+    ? `Padrão: ${s.email} (ou digite outro e-mail para incluir)`
+    : "Deixe em branco para usar o e-mail oficial da escola";
 });
 
-// Configuração
+function wireOptionalSchoolPicker(cieInputId, infoId, emailInputId) {
+  $(cieInputId).addEventListener("input", e => {
+    const s = findSchool(e.target.value);
+    if (s) {
+      $(infoId).innerHTML = `✅ <b>${escapeHtml(s.name)}</b> — E-mail: <code>${s.email}</code> <button type="button" class="btn btn-sm btn-light" style="padding:2px 8px;margin-left:6px" data-fill-school="${s.email}" data-target="${emailInputId}">Usar este e-mail</button>`;
+      if (!$(emailInputId).value.trim()) {
+        $(emailInputId).value = s.email;
+        $(emailInputId).dispatchEvent(new Event("input"));
+      }
+    } else {
+      $(infoId).innerHTML = e.target.value.trim() ? "ℹ️ Escola não identificada pelo CIE digitado" : "&nbsp;";
+    }
+  });
+}
+wireOptionalSchoolPicker("pec-cie", "pec-cie-info", "pec-email");
+wireOptionalSchoolPicker("sup-cie", "sup-cie-info", "sup-email");
+
+document.addEventListener("click", e => {
+  const btn = e.target.closest("[data-fill-school]");
+  if (!btn) return;
+  const email = btn.getAttribute("data-fill-school");
+  const target = $(btn.getAttribute("data-target"));
+  if (!target) return;
+  const cur = parseEmailList(target.value).valid;
+  if (!cur.includes(email)) target.value = [...cur, email].join(", ");
+  target.dispatchEvent(new Event("input"));
+});
+
+// Alterna visibilidade do campo de e-mail quando escolhe envio em lote
+function wireModeToggle(modeSelectId, emailWrapId, schoolWrapId = null) {
+  $(modeSelectId).addEventListener("change", e => {
+    const isBatch = e.target.value !== "single" && e.target.value !== "custom";
+    $(emailWrapId).hidden = isBatch;
+    if (schoolWrapId && (e.target.value === "all_schools" || e.target.value === "test_only")) {
+      $(schoolWrapId).hidden = true;
+    } else if (schoolWrapId) {
+      $(schoolWrapId).hidden = false;
+    }
+  });
+}
+wireModeToggle("ag-mode", "ag-email-wrap");
+wireModeToggle("pec-mode", "pec-email-wrap", "pec-school-wrap");
+wireModeToggle("sup-mode", "sup-email-wrap", "sup-school-wrap");
+wireModeToggle("av-mode", "av-email-wrap");
+
+// =====================================================================
+// FUNÇÃO UNIFICADA DE DISPARO (INDIVIDUAL OU LOTE) + SALVAMENTO NO GRUPO
+// =====================================================================
+async function handleHubSubmit({
+  system,
+  mode,
+  cieValue = "",
+  osValue = "",
+  rawEmails = "",
+  customMessage = "",
+  customTitle = "",
+  saveCheckboxEl,
+  suggestBoxEl,
+  btnEl,
+  msgEl,
+  progressWrapEl,
+  barEl,
+  statusEl,
+  logEl,
+  onSuccessReset
+}) {
+  msgEl.innerHTML = "";
+  const sysCfg = SYSTEMS[system];
+
+  // Validações específicas do sistema Gestão de Agendamento
+  if (system === "agendamento") {
+    if (!String(osValue || "").trim()) {
+      msgEl.innerHTML = alertBox("err", "❌ A <b>Ordem de Serviço (OS)</b> é obrigatória no card Gestão de Agendamento.");
+      return;
+    }
+    if ((mode === "single") && !findSchool(cieValue)) {
+      msgEl.innerHTML = alertBox("err", "❌ O <b>CIE da Escola</b> é obrigatório e deve pertencer a uma escola válida.");
+      return;
+    }
+  }
+
+  // Monta lista de alvos [{ email, cie, schoolName }]
+  let targets = [];
+  const selectedSchool = cieValue ? findSchool(cieValue) : null;
+
+  if (mode === "single" || mode === "custom") {
+    const { valid, invalid } = parseEmailList(rawEmails);
+    if (invalid.length > 0) {
+      msgEl.innerHTML = alertBox("err", `❌ E-mail(s) com formato inválido: <b>${escapeHtml(invalid.join(", "))}</b>`);
+      return;
+    }
+    if (valid.length === 0) {
+      if (selectedSchool) {
+        targets = [{ email: selectedSchool.email, cie: selectedSchool.cie, schoolName: selectedSchool.name }];
+      } else {
+        msgEl.innerHTML = alertBox("err", "❌ Informe pelo menos um e-mail de destino ou selecione um Grupo de E-mail.");
+        return;
+      }
+    } else {
+      // Verifica se há e-mails novos para sugerir/salvar no banco do grupo
+      const unsaved = findUnsavedEmails(system, valid, EMAIL_GROUPS);
+      if (unsaved.length > 0) {
+        const shouldSave = saveCheckboxEl?.checked || confirm(
+          `Deseja salvar o(s) e-mail(s) [${unsaved.join(", ")}] no grupo "${sysCfg.label}" para facilitar envios futuros em lote?`
+        );
+        if (shouldSave) {
+          await saveEmailsToGroup(system, unsaved.map(email => ({
+            email,
+            cie: selectedSchool?.cie || "",
+            schoolName: selectedSchool?.name || ""
+          })));
+          await refreshGroupsUI(true);
+          if (suggestBoxEl) suggestBoxEl.hidden = true;
+        }
+      }
+      targets = valid.map(email => ({
+        email,
+        cie: selectedSchool?.cie || "",
+        schoolName: selectedSchool?.name || ""
+      }));
+    }
+  } else if (mode === "group" || mode === "pec_group" || mode === "sup_group" || mode === "ag_group") {
+    const grpKey = mode === "pec_group" ? "pec" : mode === "sup_group" ? "supervisor" : mode === "ag_group" ? "agendamento" : system;
+    const grpList = EMAIL_GROUPS[grpKey] || [];
+    if (!grpList.length) {
+      msgEl.innerHTML = alertBox("warn", `⚠️ O grupo selecionado ainda não possui e-mails salvos. Digite um e-mail no campo ou cadastre no Banco de E-mails abaixo.`);
+      return;
+    }
+    targets = grpList.map(x => ({ email: x.email, cie: x.cie || selectedSchool?.cie || "", schoolName: x.schoolName || selectedSchool?.name || "" }));
+  } else if (mode === "all_schools") {
+    targets = SCHOOLS.filter(s => !isTestSchool(s.cie)).map(s => ({ email: schoolEmail(s.cie), cie: s.cie, schoolName: s.name }));
+  } else if (mode === "test_only") {
+    targets = SCHOOLS.filter(s => isTestSchool(s.cie)).map(s => ({ email: schoolEmail(s.cie), cie: s.cie, schoolName: s.name }));
+  }
+
+  if (targets.length > 1) {
+    if (!confirm(`Confirmar o envio em lote de ${targets.length} pesquisa(s) pelo card "${sysCfg.label}"?\n\nPrimeiro destinatário: ${targets[0].email}`)) return;
+  }
+
+  btnEl.disabled = true;
+
+  // Caso 1: Envio para 1 único destinatário
+  if (targets.length === 1) {
+    const t = targets[0];
+    msgEl.innerHTML = alertBox("info", "Enviando pesquisa...");
+    try {
+      const { link, school } = await createAndSendSurvey({
+        system,
+        cie: t.cie,
+        osNumber: osValue,
+        customEmail: t.email,
+        customMessage,
+        customTitle
+      });
+      msgEl.innerHTML = alertBox(
+        "ok",
+        `✅ Pesquisa (<b>${escapeHtml(sysCfg.label)}</b>) enviada com sucesso para <b>${escapeHtml(school.name)}</b> (<code>${escapeHtml(school.email)}</code>).<br><a href="${link}" target="_blank">🔗 Abrir link da pesquisa gerada</a>`
+      );
+      onSuccessReset?.();
+    } catch (err) {
+      msgEl.innerHTML = alertBox("err", "❌ " + escapeHtml(err.message));
+    } finally {
+      btnEl.disabled = false;
+    }
+    return;
+  }
+
+  // Caso 2: Envio em Lote (Grupo ou 80 Escolas)
+  progressWrapEl.hidden = false;
+  logEl.textContent = "";
+  barEl.style.width = "0%";
+  let ok = 0, fail = 0;
+  const log = line => { logEl.textContent += line + "\n"; logEl.scrollTop = 1e9; };
+
+  for (let i = 0; i < targets.length; i++) {
+    const t = targets[i];
+    try {
+      await createAndSendSurvey({
+        system,
+        cie: t.cie,
+        osNumber: osValue || `${sysCfg.defaultOs}-LOTE`,
+        customEmail: t.email,
+        customMessage,
+        customTitle,
+        campaign: `${sysCfg.label} (${new Date().toLocaleDateString("pt-BR")})`
+      });
+      ok++;
+      log(`✔ [${i + 1}/${targets.length}] ${t.schoolName || t.email} -> ${t.email}`);
+    } catch (err) {
+      fail++;
+      log(`✖ [${i + 1}/${targets.length}] ${t.email}: ${err.message}`);
+    }
+    barEl.style.width = `${((i + 1) / targets.length) * 100}%`;
+    statusEl.textContent = `${i + 1}/${targets.length} processados · ${ok} enviados · ${fail} com erro`;
+    if (i < targets.length - 1) await sleep(1400);
+  }
+
+  msgEl.innerHTML = alertBox(fail ? "warn" : "ok", `✅ Disparo em lote concluído: <b>${ok} enviada(s)</b>, <b>${fail} com erro</b>.`);
+  btnEl.disabled = false;
+  onSuccessReset?.();
+}
+
+// =====================================================================
+// SUBMISSÃO DOS 4 CARDS
+// =====================================================================
+
+// 1. Card Sistema Gestão de Agendamento
+$("form-agendamento").addEventListener("submit", e => {
+  e.preventDefault();
+  handleHubSubmit({
+    system: "agendamento",
+    mode: $("ag-mode").value,
+    cieValue: $("ag-cie").value,
+    osValue: $("ag-os").value,
+    rawEmails: $("ag-email").value,
+    saveCheckboxEl: $("ag-save-chk"),
+    suggestBoxEl: $("ag-suggest"),
+    btnEl: $("ag-btn"),
+    msgEl: $("ag-msg"),
+    progressWrapEl: $("ag-progress"),
+    barEl: $("ag-bar"),
+    statusEl: $("ag-status"),
+    logEl: $("ag-log"),
+    onSuccessReset: () => {
+      $("ag-os").value = "";
+      $("ag-email").value = "";
+      $("ag-suggest").hidden = true;
+    }
+  });
+});
+
+// 2. Card Sistema do PEC
+$("form-pec").addEventListener("submit", e => {
+  e.preventDefault();
+  handleHubSubmit({
+    system: "pec",
+    mode: $("pec-mode").value,
+    cieValue: $("pec-cie").value,
+    rawEmails: $("pec-email").value,
+    customMessage: $("pec-message").value,
+    saveCheckboxEl: $("pec-save-chk"),
+    suggestBoxEl: $("pec-suggest"),
+    btnEl: $("pec-btn"),
+    msgEl: $("pec-msg"),
+    progressWrapEl: $("pec-progress"),
+    barEl: $("pec-bar"),
+    statusEl: $("pec-status"),
+    logEl: $("pec-log"),
+    onSuccessReset: () => {
+      $("pec-email").value = "";
+      $("pec-message").value = "";
+      $("pec-suggest").hidden = true;
+    }
+  });
+});
+
+// 3. Card Sistema Supervisor
+$("form-supervisor").addEventListener("submit", e => {
+  e.preventDefault();
+  handleHubSubmit({
+    system: "supervisor",
+    mode: $("sup-mode").value,
+    cieValue: $("sup-cie").value,
+    rawEmails: $("sup-email").value,
+    customMessage: $("sup-message").value,
+    saveCheckboxEl: $("sup-save-chk"),
+    suggestBoxEl: $("sup-suggest"),
+    btnEl: $("sup-btn"),
+    msgEl: $("sup-msg"),
+    progressWrapEl: $("sup-progress"),
+    barEl: $("sup-bar"),
+    statusEl: $("sup-status"),
+    logEl: $("sup-log"),
+    onSuccessReset: () => {
+      $("sup-email").value = "";
+      $("sup-message").value = "";
+      $("sup-suggest").hidden = true;
+    }
+  });
+});
+
+// 4. Card Envio Avulso
+$("form-avulso").addEventListener("submit", e => {
+  e.preventDefault();
+  handleHubSubmit({
+    system: "avulso",
+    mode: $("av-mode").value,
+    rawEmails: $("av-email").value,
+    customTitle: $("av-title").value,
+    customMessage: $("av-message").value,
+    saveCheckboxEl: $("av-save-chk"),
+    suggestBoxEl: $("av-suggest"),
+    btnEl: $("av-btn"),
+    msgEl: $("av-msg"),
+    progressWrapEl: $("av-progress"),
+    barEl: $("av-bar"),
+    statusEl: $("av-status"),
+    logEl: $("av-log"),
+    onSuccessReset: () => {
+      $("av-email").value = "";
+      $("av-title").value = "";
+      $("av-message").value = "";
+      $("av-suggest").hidden = true;
+    }
+  });
+});
+
+// =====================================================================
+// GERENCIAMENTO DO BANCO DE E-MAILS & GRUPOS (CARD 5)
+// =====================================================================
+const GROUP_LABELS = {
+  pec: "Grupo do PEC",
+  supervisor: "Grupo Supervisor",
+  agendamento: "Grupo Gestão de Agendamento",
+  avulso: "Grupo Avulso",
+  schools: "80 Escolas Oficiais"
+};
+
+$("grp-tabs").addEventListener("click", e => {
+  const btn = e.target.closest("[data-grp]");
+  if (!btn) return;
+  activeGroupTab = btn.getAttribute("data-grp");
+  document.querySelectorAll("#grp-tabs .tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+  $("grp-add-form").hidden = activeGroupTab === "schools";
+  if (activeGroupTab !== "schools") {
+    $("grp-active-name").textContent = GROUP_LABELS[activeGroupTab];
+  }
+  renderGroupTable();
+});
+
+function renderGroupTable() {
+  const tbody = $("grp-table-body");
+  if (activeGroupTab === "schools") {
+    tbody.innerHTML = SCHOOLS.map(s => `
+      <tr>
+        <td><code>${s.cie}</code></td>
+        <td>${escapeHtml(s.name)}</td>
+        <td><code>${schoolEmail(s.cie)}</code></td>
+        <td style="text-align:right">
+          <button type="button" class="btn btn-sm btn-light" data-copy-email="${schoolEmail(s.cie)}">Copiar</button>
+        </td>
+      </tr>`).join("");
+    return;
+  }
+
+  const list = EMAIL_GROUPS[activeGroupTab] || [];
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#64748b;padding:24px">Nenhum e-mail salvo em <b>${GROUP_LABELS[activeGroupTab]}</b> ainda. Adicione acima ou envie um e-mail pelo Card correspondente.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(item => `
+    <tr>
+      <td>${item.cie ? `<code>${escapeHtml(item.cie)}</code>` : `<span style="color:#94a3b8">–</span>`}</td>
+      <td>${escapeHtml(item.schoolName || "Geral / Grupo")}</td>
+      <td><code>${escapeHtml(item.email)}</code></td>
+      <td style="text-align:right">
+        <button type="button" class="btn btn-sm btn-light" style="color:#dc2626" data-del-grp="${activeGroupTab}" data-del-email="${escapeHtml(item.email)}">Excluir</button>
+      </td>
+    </tr>`).join("");
+}
+
+$("grp-add-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  if (activeGroupTab === "schools") return;
+  const { valid, invalid } = parseEmailList($("grp-new-email").value);
+  if (invalid.length > 0) {
+    $("grp-add-msg").innerHTML = alertBox("err", `E-mail inválido: ${escapeHtml(invalid.join(", "))}`);
+    return;
+  }
+  if (!valid.length) {
+    $("grp-add-msg").innerHTML = alertBox("err", "Digite pelo menos um e-mail válido.");
+    return;
+  }
+  const school = findSchool($("grp-new-cie").value);
+  await saveEmailsToGroup(activeGroupTab, valid.map(email => ({
+    email,
+    cie: school?.cie || "",
+    schoolName: school?.name || ($("grp-new-cie").value.trim() || "")
+  })));
+  $("grp-new-email").value = "";
+  $("grp-new-cie").value = "";
+  $("grp-add-msg").innerHTML = alertBox("ok", `✅ ${valid.length} e-mail(s) salvo(s) em ${GROUP_LABELS[activeGroupTab]}.`);
+  setTimeout(() => { $("grp-add-msg").innerHTML = ""; }, 3500);
+  await refreshGroupsUI(true);
+});
+
+document.addEventListener("click", async e => {
+  const delBtn = e.target.closest("[data-del-email]");
+  if (delBtn) {
+    const grp = delBtn.getAttribute("data-del-grp");
+    const email = delBtn.getAttribute("data-del-email");
+    if (!confirm(`Remover ${email} do ${GROUP_LABELS[grp]}?`)) return;
+    await removeEmailFromGroup(grp, email);
+    await refreshGroupsUI(true);
+    return;
+  }
+  const copyBtn = e.target.closest("[data-copy-email]");
+  if (copyBtn) {
+    const mail = copyBtn.getAttribute("data-copy-email");
+    navigator.clipboard?.writeText(mail);
+    copyBtn.textContent = "Copiado!";
+    setTimeout(() => { copyBtn.textContent = "Copiar"; }, 1200);
+  }
+});
+
+// =====================================================================
+// CONFIGURAÇÃO DA URL DO POWER AUTOMATE (CARD 6)
+// =====================================================================
 $("save-webhook").addEventListener("click", async () => {
   const url = $("webhook").value.trim();
-  if (!/^https:\/\/.+sig=/.test(url)) { $("cfg-msg").innerHTML = alertBox("err", "A URL deve começar com https:// e conter a assinatura (&sig=...)."); return; }
-  try { await saveWebhookUrl(url); $("cfg-msg").innerHTML = alertBox("ok", "URL salva."); }
-  catch (e) { $("cfg-msg").innerHTML = alertBox("err", "Erro ao salvar: " + escapeHtml(e.message)); }
-});
-
-// Disparo em massa (sequencial, com intervalo para respeitar limites do Outlook)
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-$("mass-btn").addEventListener("click", async () => {
-  const os = $("mass-os").value.trim();
-  if (!os) { alert("Informe a identificação do disparo."); return; }
-  const onlyTest = $("mass-only-test").checked, incTest = $("mass-test").checked;
-  const targets = SCHOOLS.filter(s => onlyTest ? isTestSchool(s.cie) : (incTest || !isTestSchool(s.cie)));
-  if (!confirm(`Confirmar o envio de ${targets.length} e-mail(s) com a identificação "${os}"?\n\nExemplo: ${schoolEmail(targets[0].cie)}`)) return;
-
-  $("mass-btn").disabled = true; $("mass-area").hidden = false; $("mass-log").textContent = "";
-  let ok = 0, fail = 0;
-  const log = t => { $("mass-log").textContent += t + "\n"; $("mass-log").scrollTop = 1e9; };
-  for (let i = 0; i < targets.length; i++) {
-    const s = targets[i];
-    try { await createAndSendSurvey({ cie: s.cie, osNumber: os, campaign: os }); ok++; log(`✔ ${s.cie} ${s.name} -> ${schoolEmail(s.cie)}`); }
-    catch (err) { fail++; log(`✖ ${s.cie} ${s.name}: ${err.message}`); }
-    $("mass-bar").style.width = `${((i + 1) / targets.length) * 100}%`;
-    $("mass-status").textContent = `${i + 1}/${targets.length} processadas · ${ok} enviadas · ${fail} com erro`;
-    if (i < targets.length - 1) await sleep(1500);
+  if (!/^https:\/\/.+sig=/.test(url)) {
+    $("cfg-msg").innerHTML = alertBox("err", "A URL deve começar com https:// e conter a assinatura (&sig=...).");
+    return;
   }
-  log(`\nConcluído: ${ok} enviadas, ${fail} com erro.`);
-  $("mass-btn").disabled = false;
+  try {
+    await saveWebhookUrl(url);
+    $("cfg-msg").innerHTML = alertBox("ok", "✅ URL do Power Automate salva com sucesso no Firebase.");
+  } catch (e) {
+    $("cfg-msg").innerHTML = alertBox("err", "Erro ao salvar: " + escapeHtml(e.message));
+  }
 });
 </script>
 </body>

@@ -7,27 +7,27 @@
 <title>Dashboard - Qualidade TI | U.R.E. Sorocaba</title>
 <link rel="icon" href="images/logo_ure.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=2">
+<link rel="stylesheet" href="css/style.css?v=3">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 <header class="topbar"><div class="topbar-inner">
   <img src="images/logo_ure.png" alt="U.R.E. Sorocaba">
-  <div class="brand"><b>U.R.E. SOROCABA</b><span>Dashboard de Qualidade — Suporte de TI</span></div>
-  <nav><a href="index.html">Envio</a><a href="dashboard.html" class="active">Dashboard</a></nav>
+  <div class="brand"><b>U.R.E. SOROCABA</b><span>Dashboard de Qualidade — Hub de Sistemas</span></div>
+  <nav><a href="index.html">Hub de Envio</a><a href="dashboard.html" class="active">Dashboard</a></nav>
   <div class="userbar" id="user"></div>
 </div></header>
 
 <section id="login" class="login-wrap" hidden>
   <div class="card login-card">
-    <img src="images/logo_ure.png" alt="">
+    <img src="images/logo_ure.png" alt="Logo U.R.E. Sorocaba">
     <h2>Acesso da equipe de TI</h2>
     <p class="sub">Entre com seu usuário cadastrado no sistema.</p>
     <form>
-      <div class="field"><label class="f">Usuário ou E-mail</label><input class="f" name="email" type="text" placeholder="Ex.: admin" autocomplete="username" required></div>
-      <div class="field"><label class="f">Senha</label><input class="f" name="password" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-primary btn-block">Entrar</button>
-      <div class="login-msg"></div>
+      <div class="field"><label class="f" for="d-email">Usuário ou E-mail</label><input class="f" id="d-email" name="email" type="text" placeholder="Ex.: admin" autocomplete="username" autocorrect="off" autocapitalize="off" spellcheck="false" required></div>
+      <div class="field"><label class="f" for="d-pass">Senha</label><input class="f" id="d-pass" name="password" type="password" autocomplete="current-password" required></div>
+      <button type="submit" class="btn btn-primary btn-block">Entrar</button>
+      <div class="login-msg" aria-live="polite"></div>
       <p style="text-align:center;font-size:13px;margin-top:6px"><a href="#" class="forgot">Esqueci minha senha</a></p>
     </form>
   </div>
@@ -37,12 +37,22 @@
   <!-- Filtros -->
   <div class="card" style="margin-bottom:18px">
     <div class="toolbar">
-      <div class="field"><label class="f">De</label><input class="f" type="date" id="f-from"></div>
-      <div class="field"><label class="f">Até</label><input class="f" type="date" id="f-to"></div>
-      <div class="field"><label class="f">Disparo / campanha</label><select class="f" id="f-campaign"><option value="">Todos</option><option value="__none">Somente atendimentos (OS)</option></select></div>
+      <div class="field"><label class="f" for="f-from">De</label><input class="f" type="date" id="f-from"></div>
+      <div class="field"><label class="f" for="f-to">Até</label><input class="f" type="date" id="f-to"></div>
+      <div class="field">
+        <label class="f" for="f-system">Sistema / Card</label>
+        <select class="f" id="f-system">
+          <option value="">Todos os Sistemas</option>
+          <option value="agendamento">🛠️ Gestão de Agendamento</option>
+          <option value="pec">📚 Sistema do PEC</option>
+          <option value="supervisor">🧭 Sistema Supervisor</option>
+          <option value="avulso">✉️ Envio Avulso</option>
+        </select>
+      </div>
+      <div class="field"><label class="f" for="f-campaign">Disparo / campanha</label><select class="f" id="f-campaign"><option value="">Todos</option><option value="__none">Somente atendimentos (OS)</option></select></div>
       <div class="field" style="display:flex;gap:8px;align-items:center;padding-bottom:12px"><input type="checkbox" id="f-test" style="width:18px;height:18px"><label for="f-test" style="font-size:14px">Ocultar escola de teste</label></div>
-      <button class="btn btn-light" id="refresh">↻ Atualizar</button>
-      <button class="btn btn-light" id="csv">⬇ Exportar CSV</button>
+      <button type="button" class="btn btn-light" id="refresh">↻ Atualizar</button>
+      <button type="button" class="btn btn-light" id="csv">⬇ Exportar CSV</button>
     </div>
   </div>
 
@@ -60,12 +70,12 @@
 
   <!-- Gráficos -->
   <div class="grid grid-2" style="margin-bottom:18px">
-    <div class="card"><h2>🏆 Top 10 escolas com mais OS</h2><p class="sub">Volume de atendimentos (demanda) por escola</p><div class="chart-box" style="height:340px"><canvas id="c-top"></canvas></div></div>
-    <div class="card"><h2>📈 OS abertas por dia</h2><p class="sub">Tendência de demanda no período</p><div class="chart-box" style="height:340px"><canvas id="c-day"></canvas></div></div>
-    <div class="card"><h2>📅 OS por dia da semana</h2><p class="sub">Identifica picos de demanda</p><div class="chart-box"><canvas id="c-week"></canvas></div></div>
-    <div class="card"><h2>🗓️ OS por mês × respondidas</h2><p class="sub">Volume mensal e adesão à pesquisa</p><div class="chart-box"><canvas id="c-month"></canvas></div></div>
+    <div class="card"><h2>🏆 Top 10 escolas / unidades</h2><p class="sub">Volume de pesquisas enviadas por unidade</p><div class="chart-box" style="height:340px"><canvas id="c-top"></canvas></div></div>
+    <div class="card"><h2>📈 Envios por dia</h2><p class="sub">Tendência de envios no período</p><div class="chart-box" style="height:340px"><canvas id="c-day"></canvas></div></div>
+    <div class="card"><h2>📅 Envios por dia da semana</h2><p class="sub">Identifica picos de atendimento</p><div class="chart-box"><canvas id="c-week"></canvas></div></div>
+    <div class="card"><h2>🗓️ Envios por mês × respondidas</h2><p class="sub">Volume mensal e adesão à pesquisa</p><div class="chart-box"><canvas id="c-month"></canvas></div></div>
     <div class="card"><h2>⭐ Distribuição das notas</h2><p class="sub">Quantidade de respostas por estrela em cada pergunta</p><div class="chart-box"><canvas id="c-dist"></canvas></div></div>
-    <div class="card"><h2>📊 Ranking de satisfação por escola</h2><p class="sub">Média das respostas (escolas com ao menos 1 resposta)</p><div class="chart-box" style="height:300px;overflow:auto"><canvas id="c-rank"></canvas></div></div>
+    <div class="card"><h2>📊 Ranking de satisfação por escola</h2><p class="sub">Média das respostas (unidades com ao menos 1 resposta)</p><div class="chart-box" style="height:300px;overflow:auto"><canvas id="c-rank"></canvas></div></div>
   </div>
 
   <!-- Quadro de Elogios e Sugestões (Pergunta 4) -->
@@ -74,7 +84,7 @@
     <p class="sub">Respostas da pergunta aberta: "Gostaria de registrar algum elogio ou sugestão para aprimorar o atendimento ou os serviços oferecidos pelo setor de Tecnologia?"</p>
     <div class="table-wrap" style="max-height:360px">
       <table class="t">
-        <thead><tr><th style="width:140px">Data</th><th style="width:110px">OS</th><th style="width:80px">CIE</th><th style="width:220px">Escola</th><th style="width:80px">Média</th><th>Elogio / Sugestão Registrada</th></tr></thead>
+        <thead><tr><th style="width:135px">Data</th><th style="width:140px">Sistema</th><th style="width:100px">OS / Ref</th><th style="width:75px">CIE</th><th style="width:200px">Escola / Destino</th><th style="width:75px">Média</th><th>Elogio / Sugestão Registrada</th></tr></thead>
         <tbody id="comments-rows"></tbody>
       </table>
     </div>
@@ -85,11 +95,11 @@
   <div class="card">
     <div class="toolbar">
       <h2 style="margin-right:auto">📋 Histórico de pesquisas</h2>
-      <div class="field"><input class="f" id="t-search" placeholder="Buscar escola, CIE, OS ou sugestão"></div>
-      <div class="field"><select class="f" id="t-status"><option value="">Todos os status</option><option value="completed">Respondidas</option><option value="pending">Pendentes</option></select></div>
+      <div class="field"><input class="f" id="t-search" placeholder="Buscar escola, CIE, sistema, OS ou sugestão" aria-label="Buscar pesquisa"></div>
+      <div class="field"><select class="f" id="t-status" aria-label="Filtrar por status"><option value="">Todos os status</option><option value="completed">Respondidas</option><option value="pending">Pendentes</option></select></div>
     </div>
     <div class="table-wrap">
-      <table class="t"><thead><tr><th>Enviada em</th><th>OS</th><th>CIE</th><th>Escola</th><th>Status</th><th>Pontualidade</th><th>Técnica</th><th>Cortesia</th><th>Média</th><th>Elogio / Sugestão</th><th>Respondida em</th></tr></thead>
+      <table class="t"><thead><tr><th>Enviada em</th><th>Sistema</th><th>OS / Ref</th><th>CIE</th><th>Escola / Destino</th><th>Status</th><th>Pontualidade</th><th>Técnica</th><th>Cortesia</th><th>Média</th><th>Elogio / Sugestão</th><th>Respondida em</th></tr></thead>
       <tbody id="rows"></tbody></table>
     </div>
     <div class="hint" id="t-count"></div>
@@ -97,7 +107,7 @@
 </main>
 
 <script type="module">
-import { db, mountAuth, escapeHtml, isTestSchool } from "./js/app.js?v=2";
+import { db, SYSTEMS, mountAuth, escapeHtml, isTestSchool } from "./js/app.js?v=3";
 import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -110,7 +120,7 @@ const fmt = d => d ? d.toLocaleString("pt-BR", { day:"2-digit", month:"2-digit",
 const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
 const f1 = v => v == null ? "–" : v.toFixed(1).replace(".", ",");
 const stars = v => v ? "★".repeat(v) + `<span style="color:#e2e8f0">${"★".repeat(5 - v)}</span>` : "–";
-const short = (s, n = 28) => s.length > n ? s.slice(0, n) + "…" : s;
+const short = (s, n = 28) => String(s || "").length > n ? String(s || "").slice(0, n) + "…" : String(s || "");
 
 mountAuth({ loginEl: $("login"), appEl: $("app"), userEl: $("user"), onReady: load });
 
@@ -119,7 +129,9 @@ async function load() {
   ALL = snap.docs.map(d => {
     const s = d.data();
     const scores = [s.q1, s.q2, s.q3].filter(v => typeof v === "number");
-    return { id: d.id, ...s, created: toDate(s.createdAt), completed: toDate(s.completedAt), mean: scores.length === 3 ? avg(scores) : null };
+    const sysId = s.system || "agendamento";
+    const sysLabel = s.systemLabel || SYSTEMS[sysId]?.label || "Gestão de Agendamento";
+    return { id: d.id, ...s, system: sysId, systemLabel: sysLabel, created: toDate(s.createdAt), completed: toDate(s.completedAt), mean: scores.length === 3 ? avg(scores) : null };
   });
   const camps = [...new Set(ALL.map(s => s.campaign).filter(Boolean))];
   const sel = $("f-campaign"), cur = sel.value;
@@ -131,9 +143,13 @@ async function load() {
 function filtered() {
   const from = $("f-from").value ? new Date($("f-from").value + "T00:00:00") : null;
   const to = $("f-to").value ? new Date($("f-to").value + "T23:59:59") : null;
+  const sys = $("f-system").value;
   const camp = $("f-campaign").value, hideTest = $("f-test").checked;
-  return ALL.filter(s => (!from || (s.created && s.created >= from)) && (!to || (s.created && s.created <= to))
-    && (!camp || (camp === "__none" ? !s.campaign : s.campaign === camp)) && (!hideTest || !isTestSchool(s.cie)));
+  return ALL.filter(s => (!from || (s.created && s.created >= from))
+    && (!to || (s.created && s.created <= to))
+    && (!sys || s.system === sys)
+    && (!camp || (camp === "__none" ? !s.campaign : s.campaign === camp))
+    && (!hideTest || !isTestSchool(s.cie)));
 }
 
 function chart(id, cfg) { charts[id]?.destroy(); charts[id] = new Chart($(id), cfg); }
@@ -157,46 +173,50 @@ function render() {
 
   // Top 10 escolas por volume
   const bySchool = {};
-  data.forEach(s => { (bySchool[s.cie] ??= { name: s.schoolName, n: 0, scores: [] }).n++; if (s.mean != null) bySchool[s.cie].scores.push(s.mean); });
-  const top = Object.values(bySchool).sort((a, b) => b.n - a.n).slice(0, 10);
-  chart("c-top", { type: "bar", data: { labels: top.map(x => short(x.name)), datasets: [{ label: "OS", data: top.map(x => x.n), backgroundColor: NAVY, borderRadius: 6 }] },
+  data.forEach(s => {
+    const key = s.cie || s.schoolName || s.email || "Avulso";
+    (bySchool[key] ??= { name: s.schoolName || s.email || "Avulso", n: 0, scores: [] }).n++;
+    if (s.mean != null) bySchool[key].scores.push(s.mean);
+  });
+  const top10 = Object.values(bySchool).sort((a, b) => b.n - a.n).slice(0, 10);
+  chart("c-top", { type: "bar", data: { labels: top10.map(x => short(x.name, 26)), datasets: [{ label: "Envios", data: top10.map(x => x.n), backgroundColor: NAVY, borderRadius: 6 }] },
     options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
-  // Por dia
+  // OS por dia
   const byDay = {};
-  data.forEach(s => { if (!s.created) return; const k = s.created.toISOString().slice(0, 10); byDay[k] = (byDay[k] || 0) + 1; });
+  data.forEach(s => { if (s.created) { const k = s.created.toISOString().slice(0, 10); byDay[k] = (byDay[k] || 0) + 1; } });
   const days = Object.keys(byDay).sort();
-  chart("c-day", { type: "line", data: { labels: days.map(d => d.split("-").reverse().slice(0, 2).join("/")), datasets: [{ label: "OS", data: days.map(d => byDay[d]), borderColor: GREEN, backgroundColor: "rgba(22,163,74,.15)", fill: true, tension: .3, pointRadius: 4 }] },
+  chart("c-day", { type: "line", data: { labels: days.map(d => d.split("-").reverse().slice(0, 2).join("/")),
+    datasets: [{ label: "Envios", data: days.map(d => byDay[d]), borderColor: BLUE, backgroundColor: "rgba(59,130,246,.12)", fill: true, tension: .3 }] },
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
-  // Dia da semana
-  const wd = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"], byWd = Array(7).fill(0);
-  data.forEach(s => s.created && byWd[s.created.getDay()]++);
-  chart("c-week", { type: "bar", data: { labels: wd, datasets: [{ label: "OS", data: byWd, backgroundColor: BLUE, borderRadius: 6 }] },
+  // OS por dia da semana
+  const wk = [0, 0, 0, 0, 0, 0, 0];
+  data.forEach(s => { if (s.created) wk[s.created.getDay()]++; });
+  chart("c-week", { type: "bar", data: { labels: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"], datasets: [{ data: wk, backgroundColor: GOLD, borderRadius: 6 }] },
     options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
-  // Por mês x respondidas
-  const byM = {};
-  data.forEach(s => { if (!s.created) return; const k = s.created.toISOString().slice(0, 7); (byM[k] ??= { a: 0, r: 0 }).a++; if (s.status === "completed") byM[k].r++; });
-  const months = Object.keys(byM).sort();
-  chart("c-month", { type: "bar", data: { labels: months.map(m => m.split("-").reverse().join("/")), datasets: [
-      { label: "OS enviadas", data: months.map(m => byM[m].a), backgroundColor: NAVY, borderRadius: 6 },
-      { label: "Respondidas", data: months.map(m => byM[m].r), backgroundColor: GOLD, borderRadius: 6 }] },
+  // OS por mês x respondidas
+  const byMonth = {};
+  data.forEach(s => { if (s.created) { const k = s.created.toISOString().slice(0, 7); (byMonth[k] ??= { sent: 0, done: 0 }).sent++; if (s.status === "completed") byMonth[k].done++; } });
+  const months = Object.keys(byMonth).sort();
+  chart("c-month", { type: "bar", data: { labels: months.map(m => m.split("-").reverse().join("/")),
+    datasets: [{ label: "Enviadas", data: months.map(m => byMonth[m].sent), backgroundColor: NAVY, borderRadius: 6 },
+               { label: "Respondidas", data: months.map(m => byMonth[m].done), backgroundColor: GREEN, borderRadius: 6 }] },
     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
-  // Distribuição de notas
+  // Distribuição de estrelas (1..5) por pergunta
   const dist = k => [1, 2, 3, 4, 5].map(v => done.filter(s => s[k] === v).length);
-  chart("c-dist", { type: "bar", data: { labels: ["1 ★", "2 ★", "3 ★", "4 ★", "5 ★"], datasets: [
-      { label: "Pontualidade", data: dist("q1"), backgroundColor: NAVY, borderRadius: 4 },
-      { label: "Técnica", data: dist("q2"), backgroundColor: BLUE, borderRadius: 4 },
-      { label: "Cortesia", data: dist("q3"), backgroundColor: GOLD, borderRadius: 4 }] },
+  chart("c-dist", { type: "bar", data: { labels: ["1 ★", "2 ★", "3 ★", "4 ★", "5 ★"],
+    datasets: [{ label: "Pontualidade", data: dist("q1"), backgroundColor: NAVY },
+               { label: "Técnica", data: dist("q2"), backgroundColor: BLUE },
+               { label: "Cortesia", data: dist("q3"), backgroundColor: GOLD }] },
     options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } } });
 
-  // Ranking de satisfação
-  const rank = Object.values(bySchool).filter(x => x.scores.length).map(x => ({ name: x.name, v: avg(x.scores) })).sort((a, b) => b.v - a.v);
-  const rankBox = $("c-rank").parentElement; rankBox.style.height = Math.max(300, rank.length * 26) + "px";
-  chart("c-rank", { type: "bar", data: { labels: rank.map(x => short(x.name)), datasets: [{ label: "Média", data: rank.map(x => +x.v.toFixed(2)),
-      backgroundColor: rank.map(x => x.v >= 4 ? GREEN : x.v >= 3 ? GOLD : "#dc2626"), borderRadius: 6 }] },
+  // Ranking de satisfação por escola
+  const rank = Object.values(bySchool).filter(x => x.scores.length).map(x => ({ name: x.name, avg: avg(x.scores), n: x.scores.length })).sort((a, b) => b.avg - a.avg);
+  chart("c-rank", { type: "bar", data: { labels: rank.map(x => `${short(x.name, 24)} (${x.n})`),
+    datasets: [{ label: "Média", data: rank.map(x => +x.avg.toFixed(2)), backgroundColor: rank.map(x => x.avg >= 4 ? GREEN : x.avg >= 3 ? GOLD : "#dc2626"), borderRadius: 6 }] },
     options: { indexAxis: "y", maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 5 } } } });
 
   renderComments(data);
@@ -208,42 +228,43 @@ function renderComments(data) {
   $("comments-rows").innerHTML = withComment.map(s => `
     <tr>
       <td>${fmt(s.completed || s.created)}</td>
+      <td><span class="tag tag-sys">${escapeHtml(s.systemLabel)}</span></td>
       <td>${escapeHtml(s.os)}</td>
-      <td>${s.cie}</td>
+      <td>${escapeHtml(s.cie || "–")}</td>
       <td><b>${escapeHtml(s.schoolName)}</b></td>
       <td><b>${f1(s.mean)} ★</b></td>
       <td style="white-space:pre-wrap;color:#0f172a;background:#f8fafc;border-left:3px solid #f5b301">${escapeHtml(s.comment)}</td>
-    </tr>`).join("") || `<tr><td colspan="6" style="text-align:center;color:#64748b;padding:24px">Nenhum elogio ou sugestão registrado no período selecionado.</td></tr>`;
+    </tr>`).join("") || `<tr><td colspan="7" style="text-align:center;color:#64748b;padding:24px">Nenhum elogio ou sugestão registrado no período selecionado.</td></tr>`;
   $("comments-count").textContent = `${withComment.length} comentário(s) registrado(s)`;
 }
 
 function renderTable(data) {
   const q = $("t-search").value.trim().toLowerCase(), st = $("t-status").value;
-  const rows = data.filter(s => (!st || s.status === st) && (!q || `${s.schoolName} ${s.cie} ${s.os} ${s.comment || ""}`.toLowerCase().includes(q)));
+  const rows = data.filter(s => (!st || s.status === st) && (!q || `${s.schoolName} ${s.cie} ${s.os} ${s.systemLabel} ${s.comment || ""}`.toLowerCase().includes(q)));
   $("rows").innerHTML = rows.map(s => {
     const err = (s.emailStatus || "").startsWith("error");
     const tag = s.status === "completed" ? `<span class="tag tag-ok">Respondida</span>` : err ? `<span class="tag tag-err">Falha no e-mail</span>` : `<span class="tag tag-pend">Pendente</span>`;
     const commentCell = s.comment && String(s.comment).trim()
-      ? `<div style="max-width:280px;white-space:pre-wrap;font-size:13px;color:#1e293b">${escapeHtml(s.comment)}</div>`
+      ? `<div style="max-width:260px;white-space:pre-wrap;font-size:13px;color:#1e293b">${escapeHtml(s.comment)}</div>`
       : `<span style="color:#94a3b8">–</span>`;
-    return `<tr><td>${fmt(s.created)}</td><td>${escapeHtml(s.os)}</td><td>${s.cie}</td><td>${escapeHtml(s.schoolName)}</td><td>${tag}</td>
+    return `<tr><td>${fmt(s.created)}</td><td><span class="tag tag-sys">${escapeHtml(s.systemLabel)}</span></td><td>${escapeHtml(s.os)}</td><td>${escapeHtml(s.cie || "–")}</td><td>${escapeHtml(s.schoolName)}</td><td>${tag}</td>
       <td class="stars">${stars(s.q1)}</td><td class="stars">${stars(s.q2)}</td><td class="stars">${stars(s.q3)}</td><td><b>${f1(s.mean)}</b></td><td>${commentCell}</td><td>${fmt(s.completed)}</td></tr>`;
-  }).join("") || `<tr><td colspan="11" style="text-align:center;color:#64748b;padding:30px">Nenhuma pesquisa encontrada.</td></tr>`;
+  }).join("") || `<tr><td colspan="12" style="text-align:center;color:#64748b;padding:30px">Nenhuma pesquisa encontrada.</td></tr>`;
   $("t-count").textContent = `${rows.length} registro(s)`;
 }
 
 function exportCsv() {
   const data = filtered();
-  const head = ["Enviada em", "OS", "Disparo", "CIE", "Escola", "E-mail", "Status", "Status e-mail", "Pontualidade", "Tecnica", "Cortesia", "Media", "Elogio / Sugestao", "Respondida em"];
+  const head = ["Enviada em", "Sistema", "OS / Ref", "Disparo", "CIE", "Escola / Destino", "E-mail", "Mensagem Enviada", "Status", "Status e-mail", "Pontualidade", "Tecnica", "Cortesia", "Media", "Elogio / Sugestao", "Respondida em"];
   const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const lines = data.map(s => [fmt(s.created), s.os, s.campaign || "", s.cie, s.schoolName, s.email, s.status === "completed" ? "Respondida" : "Pendente",
+  const lines = data.map(s => [fmt(s.created), s.systemLabel, s.os, s.campaign || "", s.cie || "", s.schoolName, s.email, s.customMessage || "", s.status === "completed" ? "Respondida" : "Pendente",
     s.emailStatus || "", s.q1 ?? "", s.q2 ?? "", s.q3 ?? "", s.mean != null ? s.mean.toFixed(2).replace(".", ",") : "", s.comment || "", fmt(s.completed)].map(esc).join(";"));
   const blob = new Blob(["\uFEFF" + [head.map(esc).join(";"), ...lines].join("\r\n")], { type: "text/csv;charset=utf-8" });
   const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: `pesquisa_qualidade_${new Date().toISOString().slice(0, 10)}.csv` });
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-["f-from", "f-to", "f-campaign", "f-test"].forEach(id => $(id).addEventListener("change", render));
+["f-from", "f-to", "f-system", "f-campaign", "f-test"].forEach(id => $(id).addEventListener("change", render));
 $("t-search").addEventListener("input", () => renderTable(filtered()));
 $("t-status").addEventListener("change", () => renderTable(filtered()));
 $("refresh").addEventListener("click", load);
