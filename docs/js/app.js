@@ -313,7 +313,9 @@ export async function createAndSendSurvey({
   customEmail = null,
   customMessage = "",
   customTitle = "",
-  campaign = null
+  campaign = null,
+  serviceDate = "",
+  attachment = null
 }) {
   const sysCfg = SYSTEMS[system] || SYSTEMS.agendamento;
   let school = cie ? findSchool(cie) : null;
@@ -362,6 +364,8 @@ export async function createAndSendSurvey({
     schoolName: resolvedSchoolName,
     email: targetEmail,
     customMessage: cleanMessage || null,
+    serviceDate: serviceDate || null,
+    attachmentName: attachment?.name || null,
     status: "pending",
     q1: null,
     q2: null,
@@ -389,6 +393,9 @@ export async function createAndSendSurvey({
         cie: resolvedCie || "N/A",
         os_number: resolvedOs,
         survey_link: link,
+        service_date: serviceDate,
+        report_summary: cleanMessage,
+        attachment: attachment,
         subject: `Pesquisa de Satisfação - ${subjectSuffix}`,
         body_html: generateEmailHtml({
           system: sysCfg.id,
@@ -396,7 +403,7 @@ export async function createAndSendSurvey({
           schoolName: resolvedSchoolName,
           cie: resolvedCie,
           osNumber: resolvedOs,
-          customMessage: cleanMessage,
+          customMessage: [serviceDate ? `Data do atendimento: ${serviceDate.split("-").reverse().join("/")}` : "", cleanMessage].filter(Boolean).join("\n\n"),
           surveyLink: link,
           email: targetEmail
         })
