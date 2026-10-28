@@ -737,19 +737,24 @@ async function handleHubSubmit({
 
 let agendaRequest = null;
 let agendaSending = false;
+const agendaHost = window.parent !== window ? window.parent : window.opener;
 const allowedAgendaOrigins = new Set(['https://viniciusfernande.github.io', window.location.origin]);
 function maybeSendAgendaIntegration() {
-  if (agendaRequest && auth.currentUser && !agendaSending) sendAgendaIntegration();
+  if (agendaRequest && auth.currentUser && !agendaSending) {
+    agendaRequest.source.postMessage({type:'quality-auth-ready'},agendaRequest.origin);
+    sendAgendaIntegration();
+  }
 }
 const agendaReady = setInterval(() => {
-  if (window.opener && !agendaRequest) window.opener.postMessage({type:'quality-ready'}, '*');
+  if (agendaHost && !agendaRequest) agendaHost.postMessage({type:'quality-ready'}, '*');
 }, 1000);
 window.addEventListener('message', e => {
-  if (e.source !== window.opener || !allowedAgendaOrigins.has(e.origin) || e.data?.type !== 'quality-request' || agendaRequest) return;
+  if (e.source !== agendaHost || !allowedAgendaOrigins.has(e.origin) || e.data?.type !== 'quality-request' || agendaRequest) return;
   const data = e.data.payload;
   if (!data || !data.cie || !data.osNumber) return;
   agendaRequest = { data, origin: e.origin, source: e.source };
   clearInterval(agendaReady);
+  e.source.postMessage({type:'quality-received'},e.origin);
   $('ag-cie').value = data.cie;
   $('ag-os').value = data.osNumber;
   $('ag-mode').value = 'single';
@@ -764,7 +769,14 @@ window.addEventListener('message', e => {
   $('ag-attachment').textContent = data.attachment ? 'Anexo: ' + data.attachment.name : 'Sem anexo';
   $('form-agendamento').scrollIntoView({block:'center'});
   $('ag-msg').textContent = auth.currentUser ? 'Identificando escola e solicitando envio automático...' : 'Entre no portal para continuar o envio automaticamente.';
-  maybeSendAgendaIntegration();
+  auth.authStateReady().then(() => {
+    if (!auth.currentUser && agendaHost === window.parent) {
+      agendaRequest.source.postMessage({type:'quality-auth-required'},agendaRequest.origin);
+    }
+    maybeSendAgendaIntegration();
+  }).catch(error => {
+    agendaRequest.source.postMessage({type:'quality-result',error:error.message},agendaRequest.origin);
+  });
 });
 async function sendAgendaIntegration() {
   if (agendaSending || !agendaRequest || !auth.currentUser) return;
