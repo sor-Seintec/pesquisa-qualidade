@@ -368,8 +368,8 @@ import {
   SCHOOLS, SYSTEMS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX,
   createAndSendSurvey, getWebhookUrl, saveWebhookUrl,
   getEmailGroups, saveEmailsToGroup, removeEmailFromGroup, findUnsavedEmails, parseEmailList,
-  mountAuth, escapeHtml
-} from "./js/app.js?v=3";
+  auth, mountAuth, escapeHtml
+} from "./js/app.js?v=20261028-auto-cie";
 
 const $ = id => document.getElementById(id);
 const alertBox = (type, html) => `<div class="alert alert-${type}">${html}</div>`;
@@ -388,6 +388,7 @@ mountAuth({
   appEl: $("app"),
   userEl: $("user"),
   onReady: async () => {
+    maybeSendAgendaIntegration();
     try { $("webhook").value = await getWebhookUrl(); } catch {}
     await refreshGroupsUI(true);
   }
@@ -736,11 +737,19 @@ async function handleHubSubmit({
 
 let agendaRequest = null;
 let agendaSending = false;
+const agendaHost = window.parent !== window ? window.parent : window.opener;
+const allowedAgendaOrigins = new Set(['https://viniciusfernande.github.io', window.location.origin]);
+function maybeSendAgendaIntegration() {
+  if (agendaRequest && auth.currentUser && !agendaSending) {
+    agendaRequest.source.postMessage({type:'quality-auth-ready'},agendaRequest.origin);
+    sendAgendaIntegration();
+  }
+}
 const agendaReady = setInterval(() => {
-  if (window.opener && !agendaRequest) window.opener.postMessage({type:'quality-ready'}, '*');
+  if (agendaHost && !agendaRequest) agendaHost.postMessage({type:'quality-ready'}, '*');
 }, 1000);
 window.addEventListener('message', e => {
-  if (e.source !== window.opener || e.data?.type !== 'quality-request' || agendaRequest) return;
+  if (e.source !== agendaHost || !allowedAgendaOrigins.has(e.origin) || e.data?.type !== 'quality-request' || agendaRequest) return;
   const data = e.data.payload;
   if (!data || !data.cie || !data.osNumber) return;
   agendaRequest = { data, origin: e.origin, source: e.source };
@@ -758,9 +767,18 @@ window.addEventListener('message', e => {
   $('ag-school-name').textContent = data.schoolName || '';
   $('ag-attachment').textContent = data.attachment ? 'Anexo: ' + data.attachment.name : 'Sem anexo';
   $('form-agendamento').scrollIntoView({block:'center'});
+  $('ag-msg').textContent = auth.currentUser ? 'Identificando escola e solicitando envio automático...' : 'Entre no portal para continuar o envio automaticamente.';
+  auth.authStateReady().then(() => {
+    if (!auth.currentUser && agendaHost === window.parent) {
+      agendaRequest.source.postMessage({type:'quality-auth-required'},agendaRequest.origin);
+    }
+    maybeSendAgendaIntegration();
+  }).catch(error => {
+    agendaRequest.source.postMessage({type:'quality-result',error:error.message},agendaRequest.origin);
+  });
 });
 async function sendAgendaIntegration() {
-  if (agendaSending) return;
+  if (agendaSending || !agendaRequest || !auth.currentUser) return;
   agendaSending = true;
   $('ag-btn').disabled = true;
   $('ag-msg').textContent = 'Solicitando envio...';
