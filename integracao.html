@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Integração - Pesquisa de Qualidade</title>
+<style>body{font:16px Arial,sans-serif;background:#eef2f7;color:#172b46;margin:0;padding:24px}main{max-width:560px;margin:auto;background:white;border-radius:12px;padding:24px}input,button{box-sizing:border-box;padding:10px;width:100%;margin:5px 0 12px}button{background:#1858a8;color:white;border:0;border-radius:5px;cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#f2f5fa;padding:12px}#error{color:#b91c1c}</style></head><body><main>
+<h1>Pesquisa de Qualidade</h1><p>Confira o atendimento e entre com sua conta autorizada para solicitar o envio.</p>
+<p id="status">Aguardando os dados do agendamento…</p><pre id="details" hidden></pre>
+<div id="login"><label>E-mail<input id="email" type="email" autocomplete="username"></label><label>Senha<input id="password" type="password" autocomplete="current-password"></label><button id="sign-in">Entrar</button></div>
+<p id="user"></p><label id="attachment-check" hidden><input id="confirmed-attachment" type="checkbox" style="width:auto"> Confirme que o fluxo do Power Automate foi configurado para anexar o arquivo recebido.</label>
+<button id="send" disabled>Confirmar solicitação de envio</button><p id="error" role="alert"></p>
+</main><script type="module">
+import { auth, createAndSendSurvey, findSchool } from './js/app.js';
+import { onAuthStateChanged, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
+const $ = id => document.getElementById(id); let payload, parentOrigin, busy = false;
+if (!window.opener) $('status').textContent = 'Abra esta página pelo sistema de agendamento.';
+const announce = () => { if (window.opener && !payload) window.opener.postMessage({type:'quality-ready'}, '*'); };
+setInterval(announce, 1000); announce();
+window.addEventListener('message', e => {
+  if (e.source !== window.opener || e.data?.type !== 'quality-request' || payload) return;
+  parentOrigin = e.origin; payload = e.data.payload;
+  if (!payload || typeof payload !== 'object') return;
+  $('status').textContent = 'Dados recebidos. Confira antes de confirmar.';
+  $('details').hidden = false;
+  $('details').textContent = `Escola: ${payload.schoolName}\nCIE: ${payload.cie}\nO.S.: ${payload.osNumber}\nData: ${payload.serviceDate}\nE-mail: ${payload.customEmail}\nResumo: ${payload.customMessage || 'Não informado'}\nAnexo: ${payload.attachment?.name || 'Nenhum'}`;
+  const destination = payload.customEmail || findSchool(payload.cie)?.email;
+  $('details').textContent += `\nDestinatário utilizado: ${destination || 'CIE não encontrado no cadastro'}`;
+  $('attachment-check').hidden = !payload.attachment;
+  $('send').disabled = !auth.currentUser;
+});
+onAuthStateChanged(auth, user => { $('login').hidden = !!user; $('user').textContent = user ? `Acesso à pesquisa: ${user.email} (não é o remetente)` : ''; $('send').disabled = !user || !payload || busy; });
+$('sign-in').onclick = async () => { try { $('error').textContent = ''; await signInWithEmailAndPassword(auth, $('email').value, $('password').value); $('password').value = ''; } catch (e) { $('error').textContent = 'Não foi possível entrar: ' + e.message; } };
+$('send').onclick = async () => {
+  if (!payload || !auth.currentUser || busy) return;
+  if (payload.attachment && !$('confirmed-attachment').checked) { $('error').textContent = 'Configure o fluxo para anexos e marque a confirmação.'; return; }
+  busy = true; $('send').disabled = true; $('error').textContent = '';
+  try {
+    const result = await createAndSendSurvey({ ...payload, system:'agendamento' });
+    $('status').textContent = 'Solicitação aceita pelo Power Automate. Você pode fechar esta janela.';
+    window.opener.postMessage({type:'quality-result',token:result.token,recipientEmail:result.school.email}, parentOrigin);
+  } catch (e) {
+    $('error').textContent = e.message;
+    window.opener.postMessage({type:'quality-result',error:e.message}, parentOrigin);
+  }
+};
+</script></body></html>
