@@ -7,7 +7,7 @@
 <p id="user"></p><label id="attachment-check" hidden><input id="confirmed-attachment" type="checkbox" style="width:auto"> Confirme que o fluxo do Power Automate foi configurado para anexar o arquivo recebido.</label>
 <button id="send" disabled>Confirmar solicitação de envio</button><p id="error" role="alert"></p>
 </main><script type="module">
-import { auth, createAndSendSurvey } from './js/app.js';
+import { auth, createAndSendSurvey, findSchool } from './js/app.js';
 import { onAuthStateChanged, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js';
 const $ = id => document.getElementById(id); let payload, parentOrigin, busy = false;
 if (!window.opener) $('status').textContent = 'Abra esta página pelo sistema de agendamento.';
@@ -20,10 +20,12 @@ window.addEventListener('message', e => {
   $('status').textContent = 'Dados recebidos. Confira antes de confirmar.';
   $('details').hidden = false;
   $('details').textContent = `Escola: ${payload.schoolName}\nCIE: ${payload.cie}\nO.S.: ${payload.osNumber}\nData: ${payload.serviceDate}\nE-mail: ${payload.customEmail}\nResumo: ${payload.customMessage || 'Não informado'}\nAnexo: ${payload.attachment?.name || 'Nenhum'}`;
+  const destination = payload.customEmail || findSchool(payload.cie)?.email;
+  $('details').textContent += `\nDestinatário utilizado: ${destination || 'CIE não encontrado no cadastro'}`;
   $('attachment-check').hidden = !payload.attachment;
   $('send').disabled = !auth.currentUser;
 });
-onAuthStateChanged(auth, user => { $('login').hidden = !!user; $('user').textContent = user ? `Conta: ${user.email}` : ''; $('send').disabled = !user || !payload || busy; });
+onAuthStateChanged(auth, user => { $('login').hidden = !!user; $('user').textContent = user ? `Acesso à pesquisa: ${user.email} (não é o remetente)` : ''; $('send').disabled = !user || !payload || busy; });
 $('sign-in').onclick = async () => { try { $('error').textContent = ''; await signInWithEmailAndPassword(auth, $('email').value, $('password').value); $('password').value = ''; } catch (e) { $('error').textContent = 'Não foi possível entrar: ' + e.message; } };
 $('send').onclick = async () => {
   if (!payload || !auth.currentUser || busy) return;
@@ -32,7 +34,7 @@ $('send').onclick = async () => {
   try {
     const result = await createAndSendSurvey({ ...payload, system:'agendamento' });
     $('status').textContent = 'Solicitação aceita pelo Power Automate. Você pode fechar esta janela.';
-    window.opener.postMessage({type:'quality-result',token:result.token}, parentOrigin);
+    window.opener.postMessage({type:'quality-result',token:result.token,recipientEmail:result.school.email}, parentOrigin);
   } catch (e) {
     $('error').textContent = e.message;
     window.opener.postMessage({type:'quality-result',error:e.message}, parentOrigin);

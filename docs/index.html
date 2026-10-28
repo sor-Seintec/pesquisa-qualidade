@@ -107,6 +107,15 @@
           </div>
         </div>
 
+        <section id="ag-integration" hidden>
+          <p>Atendimento recebido da agenda. O destinatário será definido pelo cadastro do CIE na pesquisa.</p>
+          <p id="ag-school-name"></p>
+          <label class="f" for="ag-date">Data do atendimento</label>
+          <input class="f" id="ag-date" type="date">
+          <label class="f" for="ag-report">Resumo do relatório</label>
+          <textarea class="f" id="ag-report" rows="5"></textarea>
+          <p id="ag-attachment"></p>
+        </section>
         <button type="submit" class="btn btn-primary btn-block" id="ag-btn">Enviar Pesquisa — Gestão de Agendamento</button>
         <div id="ag-progress" hidden>
           <div class="progress"><div id="ag-bar"></div></div>
@@ -359,8 +368,8 @@ import {
   SCHOOLS, SYSTEMS, findSchool, schoolEmail, isTestSchool, EMAIL_SUFFIX,
   createAndSendSurvey, getWebhookUrl, saveWebhookUrl,
   getEmailGroups, saveEmailsToGroup, removeEmailFromGroup, findUnsavedEmails, parseEmailList,
-  mountAuth, escapeHtml
-} from "./js/app.js?v=3";
+  auth, mountAuth, escapeHtml
+} from "./js/app.js?v=20261028-auto-cie";
 
 const $ = id => document.getElementById(id);
 const alertBox = (type, html) => `<div class="alert alert-${type}">${html}</div>`;
@@ -379,6 +388,7 @@ mountAuth({
   appEl: $("app"),
   userEl: $("user"),
   onReady: async () => {
+    maybeSendAgendaIntegration();
     try { $("webhook").value = await getWebhookUrl(); } catch {}
     await refreshGroupsUI(true);
   }
@@ -725,9 +735,60 @@ async function handleHubSubmit({
 // SUBMISSÃO DOS 4 CARDS
 // =====================================================================
 
+let agendaRequest = null;
+let agendaSending = false;
+const allowedAgendaOrigins = new Set(['https://viniciusfernande.github.io', window.location.origin]);
+function maybeSendAgendaIntegration() {
+  if (agendaRequest && auth.currentUser && !agendaSending) sendAgendaIntegration();
+}
+const agendaReady = setInterval(() => {
+  if (window.opener && !agendaRequest) window.opener.postMessage({type:'quality-ready'}, '*');
+}, 1000);
+window.addEventListener('message', e => {
+  if (e.source !== window.opener || !allowedAgendaOrigins.has(e.origin) || e.data?.type !== 'quality-request' || agendaRequest) return;
+  const data = e.data.payload;
+  if (!data || !data.cie || !data.osNumber) return;
+  agendaRequest = { data, origin: e.origin, source: e.source };
+  clearInterval(agendaReady);
+  $('ag-cie').value = data.cie;
+  $('ag-os').value = data.osNumber;
+  $('ag-mode').value = 'single';
+  $('ag-mode').disabled = true;
+  $('ag-email').value = '';
+  $('ag-email-wrap').hidden = true;
+  $('ag-cie').dispatchEvent(new Event('input'));
+  $('ag-integration').hidden = false;
+  $('ag-date').value = data.serviceDate || '';
+  $('ag-report').value = data.customMessage || '';
+  $('ag-school-name').textContent = data.schoolName || '';
+  $('ag-attachment').textContent = data.attachment ? 'Anexo: ' + data.attachment.name : 'Sem anexo';
+  $('form-agendamento').scrollIntoView({block:'center'});
+  $('ag-msg').textContent = auth.currentUser ? 'Identificando escola e solicitando envio automático...' : 'Entre no portal para continuar o envio automaticamente.';
+  maybeSendAgendaIntegration();
+});
+async function sendAgendaIntegration() {
+  if (agendaSending || !agendaRequest || !auth.currentUser) return;
+  agendaSending = true;
+  $('ag-btn').disabled = true;
+  $('ag-msg').textContent = 'Solicitando envio...';
+  try {
+    const result = await createAndSendSurvey({
+      system:'agendamento', cie:$('ag-cie').value, osNumber:$('ag-os').value,
+      serviceDate:$('ag-date').value, customMessage:$('ag-report').value,
+      attachment:agendaRequest.data.attachment || null
+    });
+    $('ag-msg').textContent = 'Solicitação aceita pelo Power Automate. Destinatário: ' + result.school.email;
+    agendaRequest.source.postMessage({type:'quality-result',token:result.token,recipientEmail:result.school.email},agendaRequest.origin);
+  } catch (error) {
+    $('ag-msg').textContent = error.message + ' Verifique o histórico do fluxo antes de tentar novamente.';
+    agendaRequest.source.postMessage({type:'quality-result',error:error.message},agendaRequest.origin);
+  }
+}
+
 // 1. Card Sistema Gestão de Agendamento
 $("form-agendamento").addEventListener("submit", e => {
   e.preventDefault();
+  if (agendaRequest) { sendAgendaIntegration(); return; }
   handleHubSubmit({
     system: "agendamento",
     mode: $("ag-mode").value,
